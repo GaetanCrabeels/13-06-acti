@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Balade Nature – Quiz Totemus</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- ══════════════ ÉCRAN D'ACCUEIL ══════════════ -->
+      <section id="screen-start" class="screen active">
+        <div class="card start-hero">
+          <span class="start-emoji">🌿</span>
+          <h1 class="start-title">Balade Nature</h1>
+          <p class="start-subtitle">
+            Pars à la découverte de la forêt et teste tes connaissances !<br />
+            Réponds correctement pour obtenir les coordonnées du prochain poste.
+          </p>
+
+          <div class="start-rules">
+            <h3>📋 Règles du jeu</h3>
+            <ul>
+              <li>Réponds aux questions QCM ou à champ libre</li>
+              <li>Chaque question a un timer – sois rapide !</li>
+              <li>Bonne réponse = points + coordonnées GPS du poste suivant</li>
+              <li>Accumule le maximum de points en équipe</li>
+            </ul>
+          </div>
+
+          <button id="btn-start" class="btn btn-primary btn-full" style="margin-top:24px">
+            🚀 Commencer la balade
+          </button>
+        </div>
+      </section>
+
+      <!-- ══════════════ ÉCRAN DE QUESTION ══════════════ -->
+      <section id="screen-question" class="screen">
+
+        <!-- En-tête : numéro, score, timer -->
+        <div class="card quiz-header">
+          <p class="progress-info">
+            Question <strong id="question-number">1</strong> / <span id="question-total">6</span>
+          </p>
+          <div class="score-badge">🏆 <span id="score">0</span> pts</div>
+        </div>
+
+        <!-- Barre de timer -->
+        <div class="card" style="padding: 16px 24px; display:flex; align-items:center; gap:12px;">
+          <span class="timer-icon">⏱️</span>
+          <span class="timer-display" id="timer-value">15</span>
+          <div class="timer-bar-track" style="flex:1">
+            <div class="timer-bar-fill" id="timer-bar" style="width:100%"></div>
+          </div>
+        </div>
+
+        <!-- Corps de la question -->
+        <div class="card" style="display:flex; flex-direction:column; gap:20px;">
+          <img id="question-image" class="question-image" src="" alt="" />
+          <p id="question-text" class="question-text"></p>
+
+          <!-- Options QCM -->
+          <div id="mcq-options"></div>
+
+          <!-- Champ libre -->
+          <form id="free-form" style="display:none;" onsubmit="return false;">
+            <input
+              id="free-input"
+              type="text"
+              placeholder="Votre réponse…"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+            <button id="free-submit" type="button" class="btn btn-primary">Valider</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ══════════════ ÉCRAN DE RÉPONSE ══════════════ -->
+      <section id="screen-answer" class="screen">
+
+        <!-- Résultat de la réponse -->
+        <div class="card answer-header" style="text-align:center; padding:28px 24px;">
+          <span id="answer-icon" class="answer-icon">✅</span>
+          <h2 id="answer-title" class="answer-title">Bonne réponse !</h2>
+          <p id="answer-exact" class="answer-exact"></p>
+          <span id="answer-points" class="points-badge gain"></span>
+        </div>
+
+        <!-- Coordonnées du prochain poste -->
+        <div id="coordinates-block" class="card coordinates-block">
+          <div class="coordinates-header">
+            <span>🧭</span>
+            <h3>Prochain poste</h3>
+          </div>
+          <p id="coordinates-value" class="coordinates-value"></p>
+          <p id="coordinates-label" class="coordinates-label"></p>
+        </div>
+
+        <button id="btn-next" class="btn btn-primary btn-full">
+          Question suivante →
+        </button>
+      </section>
+
+      <!-- ══════════════ ÉCRAN DE RÉSULTATS ══════════════ -->
+      <section id="screen-result" class="screen">
+        <div class="card result-hero">
+          <span class="result-trophy">🏆</span>
+          <h2 class="result-title">Balade terminée !</h2>
+
+          <div class="score-display">
+            <span id="final-score" class="score-big">0</span>
+            <span class="score-max">/ <span id="final-max">80</span> pts</span>
+          </div>
+
+          <p id="final-message" class="result-message"></p>
+        </div>
+
+        <button id="btn-restart" class="btn btn-accent btn-full">
+          🔄 Recommencer
+        </button>
+      </section>
+
+    </div><!-- /#app -->
+
+    <script src="questions.js"></script>
+    <script src="quiz.js"></script>
+  </body>
+</html>
