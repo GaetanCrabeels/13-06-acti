@@ -77,7 +77,7 @@ const QUESTIONS = [
   {
     id: 6,
     type: "free",
-    question: "Quelle est la couleur des baies de cette plante grimpante (sureau noir ou lierre) ? Répondre par « noir » ou « vert ».",
+    question: "Quelle est la couleur des baies de cette plante grimpante (sureau noir ou lierre) ? Répondez par « noir » ou « vert ».",
     image: null,
     options: null,
     answer: "noir",

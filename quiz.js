@@ -170,6 +170,10 @@ elFreeSubmit.addEventListener("click", () => submitFreeAnswer());
 elFreeInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") submitFreeAnswer();
 });
+elFreeForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  submitFreeAnswer();
+});
 
 function submitFreeAnswer() {
   if (answered) return;
