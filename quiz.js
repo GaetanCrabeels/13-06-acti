@@ -9,6 +9,7 @@ let score = 0;
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
+const answerRegexCache = new Map();
 
 /* ─────────────────────────── Sélecteurs ─────────────────────────── */
 const screens = {
@@ -275,13 +276,12 @@ function normalise(str) {
 }
 
 function isCorrectAnswer(q, value) {
-  if (q.acceptAny) return true;
-
   const cleanValue = value.trim();
   const normalisedValue = normalise(cleanValue);
+  if (q.acceptAny) return cleanValue.length > 0;
 
   if (q.answerPattern) {
-    const regex = new RegExp(q.answerPattern, "u");
+    const regex = getCachedRegex(q.answerPattern);
     return regex.test(cleanValue);
   }
 
@@ -298,4 +298,11 @@ function getAnswerDisplay(q) {
     return q.answers.join(" / ");
   }
   return q.answer ?? "—";
+}
+
+function getCachedRegex(pattern) {
+  if (!answerRegexCache.has(pattern)) {
+    answerRegexCache.set(pattern, new RegExp(pattern, "u"));
+  }
+  return answerRegexCache.get(pattern);
 }

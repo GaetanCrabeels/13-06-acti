@@ -3,7 +3,7 @@
  *
  * Champs complémentaires possibles :
  *   answers      : plusieurs réponses acceptées (string[])
- *   answerPattern: regex (string) pour valider une réponse libre
+ *   answerPattern: motif regex JS en string (ex: "^\\d+$") pour réponse libre
  *   acceptAny    : toute réponse non vide est acceptée
  *   answerDisplay: texte affiché comme "bonne réponse"
  */
