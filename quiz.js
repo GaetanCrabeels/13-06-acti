@@ -256,6 +256,7 @@ function showAnswerScreen(isCorrect, q, isTimeout = false) {
 
 elNextBtn.addEventListener("click", () => {
   if (!lastAnswerCorrect) {
+    answered = false;
     showScreen("question");
     loadQuestion(currentIndex);
     return;

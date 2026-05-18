@@ -98,7 +98,7 @@ const QUESTIONS = [
     answer: "Vrai",
     points: 250,
     coordinates: "50.201160, 4.387284",
-    coordinatesLabel: "Étape 4 – Rejoignez le point suivant pour les questions Henryesques.",
+    coordinatesLabel: "Étape 4 – Rejoignez le point suivant pour les questions Henryesque.",
   },
   {
     id: 9,
@@ -109,7 +109,7 @@ const QUESTIONS = [
     answer: "Copilot",
     points: 200,
     coordinates: "50.201160, 4.387284",
-    coordinatesLabel: "Restez sur l’étape 4 pour la suite des questions Henryesques.",
+    coordinatesLabel: "Restez sur l’étape 4 pour la suite des questions Henryesque.",
   },
   {
     id: 10,
