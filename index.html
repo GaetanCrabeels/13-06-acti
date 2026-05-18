@@ -9,24 +9,22 @@
   </head>
   <body>
     <div id="app">
-
-      <!-- ══════════════ ÉCRAN D'ACCUEIL ══════════════ -->
       <section id="screen-start" class="screen active">
         <div class="card start-hero">
           <span class="start-emoji">🌿</span>
           <h1 class="start-title">Jeu de piste – 13/06</h1>
           <p class="start-subtitle">
-            Parcourez les Lacs de l’Eau d’Heure en équipe et relevez les défis.<br />
-            Questions, énigmes et coordonnées GPS s’enchaînent tout au long du parcours.
+            Parcourez les Lacs de l’Eau d’Heure en équipe en validant chaque étape dans l’ordre : signe distinctif d’abord, défi ou énigme ensuite.
           </p>
 
           <div class="start-rules">
             <h3>📋 Règles du jeu</h3>
             <ul>
               <li>Suivez le parcours dans le sens antihorloger depuis le point barbecue</li>
-              <li>Répondez aux questions (QCM/champ libre), avec chrono uniquement quand indiqué</li>
-              <li>Cumulez des points via les défis, les énigmes et les questions Henryesque</li>
-              <li>Utilisez les coordonnées affichées pour rejoindre chaque étape</li>
+              <li>À chaque étape, commencez par la question de la colonne « Signe distinctif »</li>
+              <li>Les Vrai/Faux, les devinettes et les questions Henryesque sont désormais regroupés</li>
+              <li>Respectez les bonus/malus : indices à -50, Henryesque à 800 pts avec -1 pt/s et -10 par mauvaise réponse</li>
+              <li>Pensez aux bonus manuels : objectifs annexes du Mölkky, feuilles rapportées et choix final de l’objet caché</li>
             </ul>
           </div>
 
@@ -36,19 +34,21 @@
         </div>
       </section>
 
-      <!-- ══════════════ ÉCRAN DE QUESTION ══════════════ -->
       <section id="screen-question" class="screen">
-
-        <!-- En-tête : numéro, score, timer -->
         <div class="card quiz-header">
-          <p class="progress-info">
-            Question <strong id="question-number">1</strong> / <span id="question-total">6</span>
-          </p>
-          <div class="score-badge">🏆 <span id="score">0</span> pts</div>
+          <div class="quiz-header-main">
+            <p class="progress-info">
+              Question <strong id="question-number">1</strong> / <span id="question-total">6</span>
+            </p>
+            <p id="stage-label" class="stage-label"></p>
+          </div>
+          <div class="quiz-header-side">
+            <div class="score-badge">🏆 <span id="score">0</span> pts</div>
+            <div id="mode-badge" class="mode-badge"></div>
+          </div>
         </div>
 
-        <!-- Barre de timer -->
-        <div id="timer-block-card" class="card" style="padding: 16px 24px; display:flex; align-items:center; gap:12px;">
+        <div id="timer-block-card" class="card timer-card">
           <span class="timer-icon">⏱️</span>
           <span class="timer-display" id="timer-value">15</span>
           <div class="timer-bar-track" style="flex:1">
@@ -56,15 +56,18 @@
           </div>
         </div>
 
-        <!-- Corps de la question -->
-        <div class="card" style="display:flex; flex-direction:column; gap:20px;">
+        <div class="card question-card">
+          <span id="question-section" class="section-badge"></span>
+          <p id="question-instructions" class="question-instructions"></p>
+          <div id="hint-wrap" class="hint-wrap">
+            <button id="hint-btn" type="button" class="btn btn-secondary"></button>
+            <p id="hint-text" class="hint-text"></p>
+          </div>
           <img id="question-image" class="question-image" src="" alt="" />
           <p id="question-text" class="question-text"></p>
 
-          <!-- Options QCM -->
           <div id="mcq-options"></div>
 
-          <!-- Champ libre -->
           <form id="free-form" style="display:none;">
             <input
               id="free-input"
@@ -79,10 +82,7 @@
         </div>
       </section>
 
-      <!-- ══════════════ ÉCRAN DE RÉPONSE ══════════════ -->
       <section id="screen-answer" class="screen">
-
-        <!-- Résultat de la réponse -->
         <div class="card answer-header" style="text-align:center; padding:28px 24px;">
           <span id="answer-icon" class="answer-icon">✅</span>
           <h2 id="answer-title" class="answer-title">Bonne réponse !</h2>
@@ -90,11 +90,10 @@
           <span id="answer-points" class="points-badge gain"></span>
         </div>
 
-        <!-- Coordonnées du prochain poste -->
         <div id="coordinates-block" class="card coordinates-block">
           <div class="coordinates-header">
             <span>🧭</span>
-            <h3>Prochain poste</h3>
+            <h3 id="coordinates-title">Suite</h3>
           </div>
           <p id="coordinates-value" class="coordinates-value"></p>
           <p id="coordinates-label" class="coordinates-label"></p>
@@ -105,17 +104,17 @@
         </button>
       </section>
 
-      <!-- ══════════════ ÉCRAN DE RÉSULTATS ══════════════ -->
       <section id="screen-result" class="screen">
         <div class="card result-hero">
           <span class="result-trophy">🏆</span>
           <h2 class="result-title">Balade terminée !</h2>
 
-          <div class="score-display">
+          <div class="score-display solo">
             <span id="final-score" class="score-big">0</span>
-            <span class="score-max">/ <span id="final-max">80</span> pts</span>
+            <span class="score-max">pts</span>
           </div>
 
+          <p id="final-details" class="result-details">Total final avec bonus et malus variables.</p>
           <p id="final-message" class="result-message"></p>
         </div>
 
@@ -123,8 +122,7 @@
           🔄 Recommencer
         </button>
       </section>
-
-    </div><!-- /#app -->
+    </div>
 
     <script src="questions.js"></script>
     <script src="quiz.js"></script>
