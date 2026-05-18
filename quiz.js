@@ -493,7 +493,7 @@ function looksLikeCoordinates(value) {
 function formatPoints(value) {
   if (value > 0) return `+${value} points`;
   if (value < 0) return `${value} points`;
-  return "+0 point";
+  return "+0 points";
 }
 
 function normalise(str) {
