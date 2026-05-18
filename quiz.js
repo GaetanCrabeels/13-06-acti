@@ -14,6 +14,7 @@ const answerRegexCache = new Map();
 const usedHints = new Set();
 
 const HENRY_STARTING_SCORE = 800;
+const MATCH_PLACEHOLDER = "Choisissez une démographie";
 let henryRemaining = HENRY_STARTING_SCORE;
 let henryInterval = null;
 let henryStarted = false;
@@ -232,7 +233,7 @@ function renderMatchQuestion(q) {
 
     const placeholder = document.createElement("option");
     placeholder.value = "";
-    placeholder.textContent = "Choisissez une démographie";
+    placeholder.textContent = MATCH_PLACEHOLDER;
     select.appendChild(placeholder);
 
     matchRightChoices.forEach((right) => {
@@ -490,7 +491,7 @@ function highlightMcqOptions(selected, q, isCorrect) {
     }
 
     if (q.kind === "henry") {
-      const isRealAnswer = isActualHenryAnswer(q, btn.dataset.value);
+      const isRealAnswer = isHenryCorrectAnswer(q, btn.dataset.value);
       if (isRealAnswer) {
         btn.classList.add("wrong");
       }
@@ -738,7 +739,7 @@ function isHenryQuestion(q) {
   return typeof q.kind === "string" && q.kind.startsWith("henry") && !henryAwarded;
 }
 
-function isActualHenryAnswer(q, value) {
+function isHenryCorrectAnswer(q, value) {
   return isCorrectAnswer({ ...q, kind: "mcq" }, value);
 }
 
@@ -859,7 +860,7 @@ function isCorrectAnswer(q, value) {
   if (q.acceptAny) return cleanValue.length > 0;
 
   if (q.kind === "henry") {
-    return !isActualHenryAnswer(q, cleanValue);
+    return !isHenryCorrectAnswer(q, cleanValue);
   }
 
   if (q.answerPattern && q.kind !== "numeric-bonus" && q.kind !== "range-bonus") {

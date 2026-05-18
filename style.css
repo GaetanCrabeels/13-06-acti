@@ -773,6 +773,10 @@ body {
   .match-row {
     grid-template-columns: 1fr;
   }
+
+  .hint-wrap {
+    width: 100%;
+  }
 }
 
 @media (max-width: 420px) {
@@ -782,10 +786,6 @@ body {
 
   .card {
     padding: 18px;
-  }
-
-  .hint-wrap {
-    width: 100%;
   }
 
   .hint-text {
