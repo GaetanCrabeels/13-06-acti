@@ -154,8 +154,8 @@ function renderHenryOptions(q) {
 function handleHenrySelection(selected, q, btn) {
   if (answered || btn.disabled) return;
 
-  const isCorrectOption = isCorrectAnswer(q, selected);
-  if (isCorrectOption) {
+  const isAnswerToAvoid = isCorrectAnswer(q, selected);
+  if (isAnswerToAvoid) {
     if (!currentHenryPenaltyApplied) {
       henryRemaining = Math.max(0, henryRemaining - 10);
       currentHenryPenaltyApplied = true;
@@ -171,8 +171,8 @@ function handleHenrySelection(selected, q, btn) {
   btn.disabled = true;
   btn.classList.add("selected");
 
-  const wrongOptionsCount = q.options.filter((opt) => !isCorrectAnswer(q, opt)).length;
-  if (currentHenrySelections.size >= wrongOptionsCount) {
+  const optionsToSelect = q.options.filter((opt) => !isCorrectAnswer(q, opt)).length;
+  if (currentHenrySelections.size >= optionsToSelect) {
     answered = true;
     stopTimer();
     setTimeout(() => {
@@ -234,6 +234,7 @@ function startHenryTimer() {
 function stopHenryTimer() {
   clearInterval(henryInterval);
   henryInterval = null;
+  henryStarted = false;
 }
 
 function startTimer(seconds) {
