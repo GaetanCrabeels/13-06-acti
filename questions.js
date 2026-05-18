@@ -253,6 +253,7 @@ const QUESTIONS = [
     type: "free",
     question: "Quelle était sa première voiture ?",
     answers: ["Golf"],
+    answerDisplay: "Golf",
     points: 0,
   },
   {
@@ -310,6 +311,7 @@ const QUESTIONS = [
     type: "free",
     question: "Dans quelle ville habitait sa grand mère paternelle ?",
     answers: ["Courcelles"],
+    answerDisplay: "Courcelles",
     points: 0,
   },
   {
