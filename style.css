@@ -262,18 +262,46 @@ body {
 
 .hint-wrap {
   display: none;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
-  padding: 14px;
-  border: 1px dashed #d5bb8d;
-  border-radius: 12px;
-  background: #fff8eb;
+  align-self: flex-start;
 }
 
 .hint-text {
   font-size: 0.9rem;
   color: #8a5a0f;
   line-height: 1.5;
+  display: none;
+}
+
+.hint-text.visible {
+  display: block;
+}
+
+.hint-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #d5bb8d;
+  background: #fff8eb;
+  color: #8a5a0f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.hint-icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #fff1cb;
+  border-color: #c8a96a;
+}
+
+.hint-icon-btn:disabled {
+  opacity: 0.75;
+  cursor: default;
 }
 
 .question-image {
@@ -350,6 +378,63 @@ body {
   gap: 10px;
 }
 
+#molkky-form {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#molkky-score-input {
+  width: 100%;
+  border: 2px solid var(--clr-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: var(--font-base);
+}
+
+#molkky-score-input:focus {
+  border-color: var(--clr-primary);
+  outline: none;
+}
+
+.molkky-objectives {
+  background: #f7f4ee;
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.molkky-objectives-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--clr-primary-dark);
+  margin-bottom: 12px;
+}
+
+.molkky-objectives-list {
+  display: grid;
+  gap: 10px;
+}
+
+.molkky-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e2dbc8;
+}
+
+.molkky-check input {
+  margin-top: 3px;
+}
+
+.molkky-check span {
+  line-height: 1.45;
+}
+
 #slider-form {
   display: none;
   flex-direction: column;
@@ -383,47 +468,50 @@ body {
 }
 
 .match-board {
-  position: relative;
+  display: block;
+}
+
+.match-rows {
   display: grid;
-  grid-template-columns: 1fr 70px 1fr;
   gap: 12px;
-  align-items: stretch;
 }
 
-.match-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.match-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--clr-border);
+  background: #f9f7f2;
 }
 
-.match-item {
-  min-height: 42px;
+.match-row.is-complete {
+  border-color: #b7d9bf;
+  background: #eef9f0;
 }
 
-.match-item.matched {
-  border-color: var(--clr-correct);
-  background: #eafaf1;
+.match-label {
+  font-weight: 700;
+  color: var(--clr-primary-dark);
+  line-height: 1.4;
 }
 
-.match-item.active {
-  border-color: var(--clr-primary-dark);
-  box-shadow: 0 0 0 2px rgba(45, 106, 45, 0.15);
+.match-select {
+  width: 100%;
+  border: 2px solid var(--clr-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: var(--font-base);
+  background: #fff;
+  color: var(--clr-text);
 }
 
-.match-lines {
-  position: absolute;
-  left: calc(50% - 35px);
-  width: 70px;
-  top: 0;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.match-lines line {
-  stroke: var(--clr-primary);
-  stroke-width: 3;
-  stroke-linecap: round;
+.match-select:focus {
+  border-color: var(--clr-primary);
+  outline: none;
 }
 
 .answer-exact.info-bubble {
@@ -681,6 +769,10 @@ body {
   #mcq-options {
     grid-template-columns: 1fr;
   }
+
+  .match-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 420px) {
@@ -688,15 +780,19 @@ body {
     flex-direction: column;
   }
 
-  .match-board {
-    grid-template-columns: 1fr;
-  }
-
-  .match-lines {
-    display: none;
-  }
-
   .card {
     padding: 18px;
+  }
+
+  .hint-wrap {
+    width: 100%;
+  }
+
+  .hint-text {
+    font-size: 0.88rem;
+  }
+
+  .score-big {
+    font-size: 3.1rem;
   }
 }

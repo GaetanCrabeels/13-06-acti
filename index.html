@@ -14,17 +14,17 @@
           <span class="start-emoji">🌿</span>
           <h1 class="start-title">Jeu de piste – 13/06</h1>
           <p class="start-subtitle">
-            Parcourez les Lacs de l’Eau d’Heure en équipe en validant chaque étape dans l’ordre : signe distinctif d’abord, défi ou énigme ensuite.
+            Parcourez les Lacs de l’Eau d’Heure en équipe en suivant les étapes dans l’ordre : Mölkky d’abord, puis signes distinctifs, énigmes et défis sur le terrain.
           </p>
 
           <div class="start-rules">
             <h3>📋 Règles du jeu</h3>
             <ul>
-              <li>Suivez le parcours dans le sens antihorloger depuis le point barbecue</li>
-              <li>À chaque étape, commencez par la question de la colonne « Signe distinctif »</li>
-              <li>Les Vrai/Faux, les devinettes et les questions Henryesque sont désormais regroupés</li>
-              <li>Respectez les bonus/malus : indices à -50, Henryesque à 800 pts avec -1 pt/s et -10 par mauvaise réponse</li>
-              <li>Pensez aux bonus manuels : objectifs annexes du Mölkky, feuilles rapportées et choix final de l’objet caché</li>
+              <li>Commencez par renseigner votre score au Mölkky et cochez les objectifs annexes validés</li>
+              <li>Suivez ensuite le parcours dans le sens antihorloger depuis le point barbecue</li>
+              <li>À chaque étape, commencez par le signe distinctif avant l’énigme ou le défi associé</li>
+              <li>Sur les questions Henryesque, il faut éviter la vraie réponse : choisissez l’intox la plus crédible</li>
+              <li>Les indices sont cachés derrière une petite icône et coûtent 50 points lorsqu’ils sont révélés</li>
             </ul>
           </div>
 
@@ -60,7 +60,16 @@
           <span id="question-section" class="section-badge"></span>
           <p id="question-instructions" class="question-instructions"></p>
           <div id="hint-wrap" class="hint-wrap">
-            <button id="hint-btn" type="button" class="btn btn-secondary"></button>
+            <button
+              id="hint-btn"
+              type="button"
+              class="hint-icon-btn"
+              aria-expanded="false"
+              aria-controls="hint-text"
+              title="Afficher l’indice"
+            >
+              💡
+            </button>
             <p id="hint-text" class="hint-text"></p>
           </div>
           <img id="question-image" class="question-image" src="" alt="" />
@@ -68,12 +77,26 @@
 
           <div id="mcq-options"></div>
 
+          <form id="molkky-form" class="molkky-form" style="display:none;">
+            <label for="molkky-score-input" class="slider-label">Score atteint au Mölkky coopératif</label>
+            <input
+              id="molkky-score-input"
+              type="number"
+              min="0"
+              inputmode="numeric"
+              placeholder="Ex. 50"
+            />
+            <div class="molkky-objectives">
+              <p class="molkky-objectives-title">Objectifs annexes validés</p>
+              <div id="molkky-objectives-list" class="molkky-objectives-list"></div>
+            </div>
+            <button id="molkky-submit" type="button" class="btn btn-primary">Enregistrer le Mölkky</button>
+          </form>
+
           <div id="match-form" class="match-form" style="display:none;">
-            <p class="match-help">Sélectionnez une commune puis sa démographie pour tracer un fil.</p>
+            <p class="match-help">Associez chaque commune à sa démographie à l’aide des menus déroulants.</p>
             <div id="match-board" class="match-board">
-              <div id="match-left" class="match-column"></div>
-              <svg id="match-lines" class="match-lines"></svg>
-              <div id="match-right" class="match-column"></div>
+              <div id="match-rows" class="match-rows"></div>
             </div>
             <button id="match-submit" type="button" class="btn btn-primary">Valider les liaisons</button>
           </div>
