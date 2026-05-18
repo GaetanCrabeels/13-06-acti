@@ -250,8 +250,8 @@ function drawMatchLines() {
   const boardRect = elMatchLines.getBoundingClientRect();
   elMatchLines.setAttribute("viewBox", `0 0 ${boardRect.width || 70} ${boardRect.height || 10}`);
   for (const [left, right] of currentMatchLinks.entries()) {
-    const leftBtn = elMatchLeft.querySelector(`[data-value="${cssEscape(left)}"]`);
-    const rightBtn = elMatchRight.querySelector(`[data-value="${cssEscape(right)}"]`);
+    const leftBtn = findButtonByValue(elMatchLeft, left);
+    const rightBtn = findButtonByValue(elMatchRight, right);
     if (!leftBtn || !rightBtn) continue;
     const leftRect = leftBtn.getBoundingClientRect();
     const rightRect = rightBtn.getBoundingClientRect();
@@ -550,7 +550,7 @@ function showAnswerScreen(result, q) {
     elAnswerPoints.className = `points-badge ${addedPoints === 0 ? "" : addedPoints > 0 ? "gain" : "loss"}`.trim();
     const bubbleText = getAnswerBubbleText(q);
     elAnswerExact.textContent = bubbleText;
-    elAnswerExact.classList.toggle("bubble", Boolean(bubbleText));
+    elAnswerExact.classList.toggle("info-bubble", Boolean(bubbleText));
     renderNextBlock(q.nextBlock);
   } else {
     elAnswerIcon.textContent = result.timeout ? "⏰" : "❌";
@@ -558,7 +558,7 @@ function showAnswerScreen(result, q) {
     elAnswerTitle.textContent = result.timeout ? "Temps écoulé !" : "Mauvaise réponse…";
     elAnswerPoints.textContent = "+0 point";
     elAnswerPoints.className = "points-badge";
-    elAnswerExact.classList.remove("bubble");
+    elAnswerExact.classList.remove("info-bubble");
     elAnswerExact.textContent = shouldSkipRetryOnWrong(q)
       ? "Pas de point pour cette question. On passe à la suivante."
       : "Ce n’est pas la bonne réponse, réessayez.";
@@ -672,7 +672,7 @@ function getQuestionOptions(q) {
 }
 
 function formatOptionLabel(value) {
-  return String(value).replace(/\s*\([^)]*\)\s*$/u, "").trim();
+  return String(value).replace(/\s*\([^)]*\)\s*/gu, " ").replace(/\s{2,}/g, " ").trim();
 }
 
 function getAnswerBubbleText(q) {
@@ -694,6 +694,10 @@ function shuffleArray(values) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+function findButtonByValue(container, value) {
+  return Array.from(container.children).find((btn) => btn.dataset.value === value) ?? null;
 }
 
 function normalise(str) {
@@ -735,9 +739,4 @@ function getCachedRegex(pattern) {
     answerRegexCache.set(pattern, new RegExp(pattern, "iu"));
   }
   return answerRegexCache.get(pattern);
-}
-
-function cssEscape(value) {
-  if (typeof CSS !== "undefined" && CSS.escape) return CSS.escape(value);
-  return String(value).replace(/["\\]/g, "\\$&");
 }

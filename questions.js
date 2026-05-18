@@ -189,7 +189,7 @@ const QUESTIONS = [
     kind: "henry-manual",
     type: "free",
     question: "Qu’a-t-il reçu à ses 40 ans ?",
-    answerPattern: "(?=.*\\bv[ée]lo\\b)(?=.*\\bultra\\b).+",
+    answerPattern: "(?=.*\\bv[ée]lo\\b)(?=.*\\bultra\\b).*",
     answerDisplay: "Un vélo et une bouteille d’Ultra comme gourde",
     points: 0,
   },

@@ -426,7 +426,7 @@ body {
   stroke-linecap: round;
 }
 
-.answer-exact.bubble {
+.answer-exact.info-bubble {
   margin-top: 10px;
   display: inline-block;
   background: #edf5ed;
