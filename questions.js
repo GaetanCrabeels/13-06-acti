@@ -189,10 +189,7 @@ const QUESTIONS = [
     kind: "henry-manual",
     type: "free",
     question: "Qu’a-t-il reçu à ses 40 ans ?",
-    answers: [
-      "Un vélo et une bouteille d’Ultra comme gourde",
-      "Un vélo et une bouteille d'Ultra comme gourde",
-    ],
+    answers: ["Un vélo et une bouteille d’Ultra comme gourde"],
     answerDisplay: "Un vélo et une bouteille d’Ultra comme gourde",
     points: 0,
   },
@@ -255,7 +252,7 @@ const QUESTIONS = [
     kind: "henry-manual",
     type: "free",
     question: "Quelle était sa première voiture ?",
-    answer: "Golf",
+    answers: ["Golf"],
     points: 0,
   },
   {
@@ -312,7 +309,7 @@ const QUESTIONS = [
     kind: "henry-manual",
     type: "free",
     question: "Dans quelle ville habitait sa grand mère paternelle ?",
-    answer: "Courcelles",
+    answers: ["Courcelles"],
     points: 0,
   },
   {
