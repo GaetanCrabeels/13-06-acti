@@ -672,7 +672,7 @@ function getQuestionOptions(q) {
 }
 
 function formatOptionLabel(value) {
-  return String(value).replace(/\s*\([^)]*\)\s*/gu, " ").replace(/\s{2,}/g, " ").trim();
+  return String(value).replace(/\s*\([^)]*\)\s*/gu, " ").replace(/\s{2,}/gu, " ").trim();
 }
 
 function getAnswerBubbleText(q) {
@@ -683,8 +683,8 @@ function getAnswerBubbleText(q) {
 }
 
 function extractParenthetical(value) {
-  const match = String(value || "").match(/\(([^)]+)\)/u);
-  return match ? match[1] : "";
+  const matches = Array.from(String(value || "").matchAll(/\(([^)]+)\)/gu), (match) => match[1].trim()).filter(Boolean);
+  return matches.join(" · ");
 }
 
 function shuffleArray(values) {
