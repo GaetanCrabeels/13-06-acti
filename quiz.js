@@ -508,6 +508,7 @@ function normalise(str) {
 }
 
 function isCorrectAnswer(q, value) {
+  if (value == null) return false;
   const cleanValue = String(value).trim();
   const normalisedValue = normalise(cleanValue);
   if (q.acceptAny) return cleanValue.length > 0;
