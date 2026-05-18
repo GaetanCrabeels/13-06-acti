@@ -9,7 +9,7 @@ let score = 0;
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
-let lastAnswerCorrect = false;
+let currentAnswerCorrect = false;
 const answerRegexCache = new Map();
 
 /* ─────────────────────────── Sélecteurs ─────────────────────────── */
@@ -53,7 +53,7 @@ document.getElementById("btn-start").addEventListener("click", startQuiz);
 function startQuiz() {
   currentIndex = 0;
   score = 0;
-  lastAnswerCorrect = false;
+  currentAnswerCorrect = false;
   showScreen("question");
   loadQuestion(currentIndex);
 }
@@ -218,7 +218,7 @@ function handleTimeout() {
 /* ─────────────────────────── Écran de réponse ─────────────────────────── */
 function showAnswerScreen(isCorrect, q, isTimeout = false) {
   showScreen("answer");
-  lastAnswerCorrect = isCorrect;
+  currentAnswerCorrect = isCorrect;
 
   if (isCorrect) {
     score += q.points ?? 10;
@@ -255,7 +255,7 @@ function showAnswerScreen(isCorrect, q, isTimeout = false) {
 }
 
 elNextBtn.addEventListener("click", () => {
-  if (!lastAnswerCorrect) {
+  if (!currentAnswerCorrect) {
     answered = false;
     showScreen("question");
     loadQuestion(currentIndex);
