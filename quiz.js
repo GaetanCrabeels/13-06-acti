@@ -9,6 +9,7 @@ let score = 0;
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
+let lastAnswerCorrect = false;
 const answerRegexCache = new Map();
 
 /* ─────────────────────────── Sélecteurs ─────────────────────────── */
@@ -24,6 +25,7 @@ const elQuestionTotal = document.getElementById("question-total");
 const elScore = document.getElementById("score");
 const elTimerValue = document.getElementById("timer-value");
 const elTimerBar = document.getElementById("timer-bar");
+const elTimerCard = document.getElementById("timer-block-card");
 const elQuestionText = document.getElementById("question-text");
 const elQuestionImage = document.getElementById("question-image");
 const elMcqOptions = document.getElementById("mcq-options");
@@ -51,6 +53,7 @@ document.getElementById("btn-start").addEventListener("click", startQuiz);
 function startQuiz() {
   currentIndex = 0;
   score = 0;
+  lastAnswerCorrect = false;
   showScreen("question");
   loadQuestion(currentIndex);
 }
@@ -95,8 +98,8 @@ function loadQuestion(index) {
     elFreeInput.focus();
   }
 
-  // Timer
-  startTimer(q.timer ?? 15);
+  // Timer (uniquement quand explicitement défini)
+  configureTimer(q.timer);
 }
 
 function renderMcqOptions(q) {
@@ -124,6 +127,17 @@ function startTimer(seconds) {
       handleTimeout();
     }
   }, 1000);
+}
+
+function configureTimer(seconds) {
+  if (Number.isFinite(seconds) && seconds > 0) {
+    elTimerCard.style.display = "flex";
+    startTimer(seconds);
+    return;
+  }
+
+  stopTimer();
+  elTimerCard.style.display = "none";
 }
 
 function updateTimerUI(remaining, total) {
@@ -204,6 +218,7 @@ function handleTimeout() {
 /* ─────────────────────────── Écran de réponse ─────────────────────────── */
 function showAnswerScreen(isCorrect, q, isTimeout = false) {
   showScreen("answer");
+  lastAnswerCorrect = isCorrect;
 
   if (isCorrect) {
     score += q.points ?? 10;
@@ -220,17 +235,32 @@ function showAnswerScreen(isCorrect, q, isTimeout = false) {
     elAnswerPoints.className = "points-badge";
   }
 
-  elAnswerExact.textContent = `Bonne réponse : ${getAnswerDisplay(q)}`;
-  elCoordinatesValue.textContent = q.coordinates;
-  elCoordinatesLabel.textContent = q.coordinatesLabel;
-  elCoordinatesBlock.style.display = "block";
+  if (isCorrect) {
+    elAnswerExact.textContent = `Bonne réponse : ${getAnswerDisplay(q)}`;
+    elCoordinatesValue.textContent = q.coordinates;
+    elCoordinatesLabel.textContent = q.coordinatesLabel;
+    elCoordinatesBlock.style.display = "block";
+  } else {
+    elAnswerExact.textContent = "Ce n’est pas la bonne réponse, réessayez.";
+    elCoordinatesBlock.style.display = "none";
+  }
 
   // Label du bouton selon s'il reste des questions
-  const isLast = currentIndex >= QUESTIONS.length - 1;
-  elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
+  if (!isCorrect) {
+    elNextBtn.textContent = "Réessayer ↺";
+  } else {
+    const isLast = currentIndex >= QUESTIONS.length - 1;
+    elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
+  }
 }
 
 elNextBtn.addEventListener("click", () => {
+  if (!lastAnswerCorrect) {
+    showScreen("question");
+    loadQuestion(currentIndex);
+    return;
+  }
+
   currentIndex++;
   if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
