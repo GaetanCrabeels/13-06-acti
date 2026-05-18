@@ -9,6 +9,7 @@ let score = 0;
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
+const answerRegexCache = new Map();
 
 /* ─────────────────────────── Sélecteurs ─────────────────────────── */
 const screens = {
@@ -149,7 +150,7 @@ function handleMcqAnswer(selected, q) {
   answered = true;
   stopTimer();
 
-  const isCorrect = normalise(selected) === normalise(q.answer);
+  const isCorrect = isCorrectAnswer(q, selected);
   highlightMcqOptions(selected, q.answer, isCorrect);
 
   setTimeout(() => showAnswerScreen(isCorrect, q), 800);
@@ -184,7 +185,7 @@ function submitFreeAnswer() {
   answered = true;
   stopTimer();
 
-  const isCorrect = normalise(val) === normalise(q.answer);
+  const isCorrect = isCorrectAnswer(q, val);
   showAnswerScreen(isCorrect, q);
 }
 
@@ -219,7 +220,7 @@ function showAnswerScreen(isCorrect, q, isTimeout = false) {
     elAnswerPoints.className = "points-badge";
   }
 
-  elAnswerExact.textContent = `Bonne réponse : ${q.answer}`;
+  elAnswerExact.textContent = `Bonne réponse : ${getAnswerDisplay(q)}`;
   elCoordinatesValue.textContent = q.coordinates;
   elCoordinatesLabel.textContent = q.coordinatesLabel;
   elCoordinatesBlock.style.display = "block";
@@ -272,4 +273,36 @@ function normalise(str) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
+}
+
+function isCorrectAnswer(q, value) {
+  const cleanValue = value.trim();
+  const normalisedValue = normalise(cleanValue);
+  if (q.acceptAny) return cleanValue.length > 0;
+
+  if (q.answerPattern) {
+    const regex = getCachedRegex(q.answerPattern);
+    return regex.test(cleanValue);
+  }
+
+  if (Array.isArray(q.answers)) {
+    return q.answers.some((answer) => normalise(answer) === normalisedValue);
+  }
+
+  return normalise(q.answer ?? "") === normalisedValue;
+}
+
+function getAnswerDisplay(q) {
+  if (q.answerDisplay) return q.answerDisplay;
+  if (Array.isArray(q.answers) && q.answers.length > 0) {
+    return q.answers.join(" / ");
+  }
+  return q.answer ?? "—";
+}
+
+function getCachedRegex(pattern) {
+  if (!answerRegexCache.has(pattern)) {
+    answerRegexCache.set(pattern, new RegExp(pattern, "u"));
+  }
+  return answerRegexCache.get(pattern);
 }
