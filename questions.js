@@ -11,8 +11,6 @@ const QUESTIONS = [
     section: "Défi de départ",
     type: "free",
     question: "Mölkky coopératif : quel score commun devez-vous atteindre exactement ?",
-    instructions:
-      "Objectif de base du Mölkky coopératif : atteindre exactement 50. Si dépassement → retour à 25.",
     answer: "50",
     points: 1000,
     nextBlock: {
@@ -239,10 +237,10 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est son totem ?",
-    options: ["Eyra?", "Mowgli", "Baloo", "Sirius"],
+    options: ["Eyra", "Mowgli", "Baloo", "Sirius"],
     answer: "Eyra",
-    answers: ["Eyra?", "Eyra"],
-    answerDisplay: "Eyra?",
+    answers: ["Eyra"],
+    answerDisplay: "Eyra",
     points: 0,
   },
   {
@@ -298,7 +296,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est l'endroit le plus lointain où il ait voyagé ?",
-    options: ["La Réunion", "Tokyo, Japon", "Lima, Pérou", "Le Caire, Égypte"],
+    options: ["La Réunion", "Tokyo", "Lima", "Le Caire"],
     answers: ["La Réunion", "La Reunion"],
     answerDisplay: "La Réunion",
     points: 0,
@@ -477,12 +475,12 @@ const QUESTIONS = [
     type: "mcq",
     question: "Peut-on bronzer sur une plage… en regardant des sapins au lieu de palmiers ?",
     options: [
-      "oui, plages aménagées au milieu des forêts 🌲",
+      "oui, sur des plages aménagées au milieu des forêts",
       "non, les plages sont interdites autour des lacs",
       "oui, mais uniquement sur des pontons flottants privés",
       "non, il n’y a que des rochers et aucune plage",
     ],
-    answer: "oui, plages aménagées au milieu des forêts 🌲",
+    answer: "oui, sur des plages aménagées au milieu des forêts",
     points: 250,
   },
   {
