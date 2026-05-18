@@ -341,7 +341,7 @@ function submitMolkkyAnswer() {
   if (q.kind !== "molkky-start") return;
 
   const reachedScore = Number.parseInt(elMolkkyScoreInput.value, 10);
-  if (!Number.isFinite(reachedScore)) return;
+  if (!Number.isFinite(reachedScore) || reachedScore < 0) return;
 
   const selectedObjectives = Array.from(elMolkkyObjectivesList.querySelectorAll("input:checked"));
   const bonusPoints = selectedObjectives.reduce((total, input) => total + Number.parseInt(input.value, 10), 0);
@@ -744,7 +744,12 @@ function isHenryCorrectAnswer(q, value) {
 }
 
 function shouldAutoAdvance(q, result) {
-  return Boolean(result.correct && !q.timer && !isHenryQuestion(q) && !q.nextBlock && currentIndex < QUESTIONS.length - 1);
+  const isCorrect = Boolean(result.correct);
+  const isTimed = Boolean(q.timer);
+  const isHenry = isHenryQuestion(q);
+  const hasTransitionBlock = Boolean(q.nextBlock);
+  const hasFollowingQuestion = currentIndex < QUESTIONS.length - 1;
+  return isCorrect && !isTimed && !isHenry && !hasTransitionBlock && hasFollowingQuestion;
 }
 
 function clearAutoAdvance() {

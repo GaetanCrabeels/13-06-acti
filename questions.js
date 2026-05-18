@@ -234,7 +234,7 @@ const QUESTIONS = [
     kind: "henry",
     question: "Quel est son totem ?",
     options: ["Eyra ?", "Erya", "Eyrah", "Ayra"],
-    answer: "Eyra",
+    answer: "Eyra ?",
     answers: ["Eyra ?", "Eyra?", "Eyra"],
     answerDisplay: "Eyra ?",
     points: 0,
