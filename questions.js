@@ -287,7 +287,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry-manual",
     type: "free",
-    question: "Quelle était le nom de son école primaire ?",
+    question: "Quel était le nom de son école primaire ?",
     answers: ["Saint Jacques", "Saint-Jacques"],
     answerDisplay: "Saint Jacques",
     points: 0,
