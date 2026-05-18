@@ -68,6 +68,23 @@
 
           <div id="mcq-options"></div>
 
+          <div id="match-form" class="match-form" style="display:none;">
+            <p class="match-help">Sélectionnez une commune puis sa démographie pour tracer un fil.</p>
+            <div id="match-board" class="match-board">
+              <div id="match-left" class="match-column"></div>
+              <svg id="match-lines" class="match-lines"></svg>
+              <div id="match-right" class="match-column"></div>
+            </div>
+            <button id="match-submit" type="button" class="btn btn-primary">Valider les liaisons</button>
+          </div>
+
+          <form id="slider-form" style="display:none;">
+            <label for="range-input" class="slider-label">Positionnez votre estimation</label>
+            <input id="range-input" type="range" min="0" max="1500" step="1" />
+            <p id="range-value" class="slider-value">0 ha</p>
+            <button id="range-submit" type="button" class="btn btn-primary">Valider</button>
+          </form>
+
           <form id="free-form" style="display:none;">
             <input
               id="free-input"

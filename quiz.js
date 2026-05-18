@@ -4,8 +4,10 @@ let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
 let currentAnswerCorrect = false;
-let currentHenrySelections = new Set();
-let currentHenryPenaltyApplied = false;
+let currentQuestion = null;
+let currentOptions = [];
+let currentMatchSelection = null;
+let currentMatchLinks = new Map();
 const answerRegexCache = new Map();
 const usedHints = new Set();
 
@@ -35,6 +37,15 @@ const elInstructions = document.getElementById("question-instructions");
 const elQuestionText = document.getElementById("question-text");
 const elQuestionImage = document.getElementById("question-image");
 const elMcqOptions = document.getElementById("mcq-options");
+const elMatchForm = document.getElementById("match-form");
+const elMatchLeft = document.getElementById("match-left");
+const elMatchRight = document.getElementById("match-right");
+const elMatchLines = document.getElementById("match-lines");
+const elMatchSubmit = document.getElementById("match-submit");
+const elSliderForm = document.getElementById("slider-form");
+const elRangeInput = document.getElementById("range-input");
+const elRangeValue = document.getElementById("range-value");
+const elRangeSubmit = document.getElementById("range-submit");
 const elFreeForm = document.getElementById("free-form");
 const elFreeInput = document.getElementById("free-input");
 const elFreeSubmit = document.getElementById("free-submit");
@@ -87,10 +98,12 @@ function showScreen(name) {
 function loadQuestion(index) {
   answered = false;
   currentAnswerCorrect = false;
-  currentHenrySelections = new Set();
-  currentHenryPenaltyApplied = false;
+  currentQuestion = QUESTIONS[index];
+  currentOptions = getQuestionOptions(currentQuestion);
+  currentMatchSelection = null;
+  currentMatchLinks = new Map();
 
-  const q = QUESTIONS[index];
+  const q = currentQuestion;
   elQuestionNumber.textContent = index + 1;
   elQuestionTotal.textContent = QUESTIONS.length;
   updateScoreUI();
@@ -110,76 +123,187 @@ function loadQuestion(index) {
 
 function renderQuestionInput(q) {
   elMcqOptions.innerHTML = "";
+  elMatchLeft.innerHTML = "";
+  elMatchRight.innerHTML = "";
+  elMatchLines.innerHTML = "";
 
-  if (q.kind === "henry") {
-    renderHenryOptions(q);
-    elMcqOptions.style.display = "grid";
+  if (q.kind === "match-pairs") {
+    elMcqOptions.style.display = "none";
+    elSliderForm.style.display = "none";
     elFreeForm.style.display = "none";
+    elMatchForm.style.display = "flex";
+    renderMatchQuestion(q);
     return;
   }
 
-  if (q.type === "mcq") {
+  if (q.kind === "range-slider") {
+    elMcqOptions.style.display = "none";
+    elMatchForm.style.display = "none";
+    elFreeForm.style.display = "none";
+    elSliderForm.style.display = "flex";
+    renderSliderQuestion(q);
+    return;
+  }
+
+  if (q.type === "mcq" || q.kind === "henry") {
     elMcqOptions.style.display = "grid";
+    elMatchForm.style.display = "none";
+    elSliderForm.style.display = "none";
     elFreeForm.style.display = "none";
     renderMcqOptions(q);
     return;
   }
 
   elMcqOptions.style.display = "none";
+  elMatchForm.style.display = "none";
+  elSliderForm.style.display = "none";
   elFreeForm.style.display = "flex";
   elFreeInput.value = "";
   elFreeInput.focus();
 }
 
 function renderMcqOptions(q) {
-  q.options.forEach((opt) => {
+  currentOptions.forEach((opt) => {
     const btn = document.createElement("button");
     btn.className = "option-btn";
-    btn.textContent = opt;
-    btn.addEventListener("click", () => handleMcqAnswer(opt, q));
+    btn.textContent = opt.label;
+    btn.dataset.value = opt.value;
+    btn.addEventListener("click", () => handleMcqAnswer(opt.value, q));
     elMcqOptions.appendChild(btn);
   });
 }
 
-function renderHenryOptions(q) {
-  q.options.forEach((opt) => {
+function renderMatchQuestion(q) {
+  const leftItems = shuffleArray(q.pairs.map((pair) => pair.left));
+  const rightItems = shuffleArray(q.pairs.map((pair) => pair.right));
+
+  leftItems.forEach((left) => {
     const btn = document.createElement("button");
-    btn.className = "option-btn henry-option";
-    btn.textContent = opt;
-    btn.addEventListener("click", () => handleHenrySelection(opt, q, btn));
-    elMcqOptions.appendChild(btn);
+    btn.className = "option-btn match-item";
+    btn.textContent = left;
+    btn.dataset.value = left;
+    btn.addEventListener("click", () => selectMatchLeft(left));
+    elMatchLeft.appendChild(btn);
   });
+
+  rightItems.forEach((right) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn match-item";
+    btn.textContent = right;
+    btn.dataset.value = right;
+    btn.addEventListener("click", () => linkMatchRight(right));
+    elMatchRight.appendChild(btn);
+  });
+
+  updateMatchUI();
 }
 
-function handleHenrySelection(selected, q, btn) {
-  if (answered || btn.disabled) return;
+function renderSliderQuestion(q) {
+  elRangeInput.min = String(q.slider?.min ?? 0);
+  elRangeInput.max = String(q.slider?.max ?? 100);
+  elRangeInput.step = String(q.slider?.step ?? 1);
+  const startValue = Number(q.slider?.min ?? 0);
+  elRangeInput.value = String(startValue);
+  updateSliderValueLabel(startValue, q.slider?.unit || "");
+}
 
-  const isAnswerToAvoid = isCorrectAnswer(q, selected);
-  if (isAnswerToAvoid) {
-    if (!currentHenryPenaltyApplied) {
-      henryRemaining = Math.max(0, henryRemaining - 10);
-      currentHenryPenaltyApplied = true;
-      updateModeBadgeText();
-      updateScoreUI();
+function selectMatchLeft(leftValue) {
+  if (answered) return;
+  currentMatchSelection = leftValue;
+  updateMatchUI();
+}
+
+function linkMatchRight(rightValue) {
+  if (answered || !currentMatchSelection) return;
+
+  for (const [left, right] of currentMatchLinks.entries()) {
+    if (right === rightValue && left !== currentMatchSelection) {
+      currentMatchLinks.delete(left);
     }
-    btn.disabled = true;
-    btn.classList.add("wrong");
-    return;
   }
 
-  currentHenrySelections.add(selected);
-  btn.disabled = true;
-  btn.classList.add("selected");
+  currentMatchLinks.set(currentMatchSelection, rightValue);
+  currentMatchSelection = null;
+  updateMatchUI();
+}
 
-  const optionsToSelect = q.options.filter((opt) => !isCorrectAnswer(q, opt)).length;
-  if (currentHenrySelections.size >= optionsToSelect) {
-    answered = true;
-    stopTimer();
-    setTimeout(() => {
-      showAnswerScreen({ correct: true, addedPoints: 0, answerDisplay: getAnswerDisplay(q) }, q);
-    }, 300);
+function updateMatchUI() {
+  Array.from(elMatchLeft.children).forEach((btn) => {
+    const value = btn.dataset.value;
+    const isActive = value === currentMatchSelection;
+    const isMatched = currentMatchLinks.has(value);
+    btn.classList.toggle("active", isActive);
+    btn.classList.toggle("matched", isMatched);
+  });
+
+  const usedRightValues = new Set(currentMatchLinks.values());
+  Array.from(elMatchRight.children).forEach((btn) => {
+    const value = btn.dataset.value;
+    btn.classList.toggle("matched", usedRightValues.has(value));
+  });
+
+  drawMatchLines();
+}
+
+function drawMatchLines() {
+  elMatchLines.innerHTML = "";
+  const boardRect = elMatchLines.getBoundingClientRect();
+  elMatchLines.setAttribute("viewBox", `0 0 ${boardRect.width || 70} ${boardRect.height || 10}`);
+  for (const [left, right] of currentMatchLinks.entries()) {
+    const leftBtn = findButtonByValue(elMatchLeft, left);
+    const rightBtn = findButtonByValue(elMatchRight, right);
+    if (!leftBtn || !rightBtn) continue;
+    const leftRect = leftBtn.getBoundingClientRect();
+    const rightRect = rightBtn.getBoundingClientRect();
+    const y1 = leftRect.top + leftRect.height / 2 - boardRect.top;
+    const y2 = rightRect.top + rightRect.height / 2 - boardRect.top;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", "4");
+    line.setAttribute("x2", String((boardRect.width || 70) - 4));
+    line.setAttribute("y1", String(y1));
+    line.setAttribute("y2", String(y2));
+    elMatchLines.appendChild(line);
   }
 }
+
+function submitMatchAnswer() {
+  if (answered) return;
+  const q = currentQuestion;
+  if (q.kind !== "match-pairs") return;
+  if (currentMatchLinks.size !== q.pairs.length) return;
+
+  answered = true;
+  stopTimer();
+  const allCorrect = q.pairs.every((pair) => currentMatchLinks.get(pair.left) === pair.right);
+  showAnswerScreen({ correct: allCorrect, addedPoints: allCorrect ? q.points ?? 0 : 0 }, q);
+}
+
+function submitSliderAnswer() {
+  if (answered) return;
+  const q = currentQuestion;
+  if (q.kind !== "range-slider") return;
+
+  answered = true;
+  stopTimer();
+  const result = evaluateAnswer(q, elRangeInput.value);
+  showAnswerScreen(result, q);
+}
+
+function updateSliderValueLabel(value, unit) {
+  elRangeValue.textContent = `${value} ${unit}`.trim();
+}
+
+elMatchSubmit.addEventListener("click", submitMatchAnswer);
+elRangeInput.addEventListener("input", () => {
+  if (!currentQuestion || currentQuestion.kind !== "range-slider") return;
+  updateSliderValueLabel(elRangeInput.value, currentQuestion.slider?.unit || "");
+});
+elRangeSubmit.addEventListener("click", submitSliderAnswer);
+window.addEventListener("resize", () => {
+  if (currentQuestion?.kind === "match-pairs" && !answered) {
+    drawMatchLines();
+  }
+});
 
 function configureHint(q) {
   if (!q.hint) {
@@ -285,6 +409,10 @@ function handleMcqAnswer(selected, q) {
   stopTimer();
 
   const result = evaluateAnswer(q, selected);
+  if (q.kind === "henry" && !result.correct && !henryAwarded) {
+    henryRemaining = Math.max(0, henryRemaining - 10);
+    updateModeBadgeText();
+  }
   highlightMcqOptions(selected, q, result.correct);
 
   setTimeout(() => showAnswerScreen(result, q), 300);
@@ -294,13 +422,13 @@ function highlightMcqOptions(selected, q, isCorrect) {
   Array.from(elMcqOptions.children).forEach((btn) => {
     btn.disabled = true;
     if (q.kind === "choice-award") {
-      if (btn.textContent === selected) btn.classList.add("selected");
+      if (btn.dataset.value === selected) btn.classList.add("selected");
       return;
     }
 
-    if (isCorrectAnswer(q, btn.textContent)) {
+    if (isCorrectAnswer(q, btn.dataset.value)) {
       btn.classList.add("correct");
-    } else if (btn.textContent === selected && !isCorrect) {
+    } else if (btn.dataset.value === selected && !isCorrect) {
       btn.classList.add("wrong");
     }
   });
@@ -332,7 +460,7 @@ function handleTimeout() {
   answered = true;
   const q = QUESTIONS[currentIndex];
 
-  if (q.type === "mcq" && q.kind !== "choice-award") {
+  if ((q.type === "mcq" || q.kind === "henry") && q.kind !== "choice-award") {
     highlightMcqOptions("__none__", q, false);
   }
 
@@ -378,6 +506,21 @@ function evaluateAnswer(q, value) {
     };
   }
 
+  if (q.kind === "range-slider") {
+    const numericValue = Number.parseFloat(String(value).replace(",", "."));
+    if (!Number.isFinite(numericValue)) {
+      return { correct: false, addedPoints: 0, answerDisplay: q.answerDisplay };
+    }
+    const tolerance = Number(q.tolerance ?? 0);
+    const target = Number(q.target ?? 0);
+    const withinRange = Math.abs(numericValue - target) <= tolerance;
+    return {
+      correct: withinRange,
+      addedPoints: withinRange ? q.points ?? 0 : 0,
+      answerDisplay: q.answerDisplay,
+    };
+  }
+
   const correct = isCorrectAnswer(q, value);
   return {
     correct,
@@ -405,7 +548,9 @@ function showAnswerScreen(result, q) {
     elAnswerTitle.textContent = result.customTitle || "Bonne réponse !";
     elAnswerPoints.textContent = formatPoints(addedPoints);
     elAnswerPoints.className = `points-badge ${addedPoints === 0 ? "" : addedPoints > 0 ? "gain" : "loss"}`.trim();
-    elAnswerExact.textContent = result.answerDisplay ? `Référence : ${result.answerDisplay}` : "";
+    const bubbleText = getAnswerBubbleText(q);
+    elAnswerExact.textContent = bubbleText;
+    elAnswerExact.classList.toggle("info-bubble", Boolean(bubbleText));
     renderNextBlock(q.nextBlock);
   } else {
     elAnswerIcon.textContent = result.timeout ? "⏰" : "❌";
@@ -413,12 +558,20 @@ function showAnswerScreen(result, q) {
     elAnswerTitle.textContent = result.timeout ? "Temps écoulé !" : "Mauvaise réponse…";
     elAnswerPoints.textContent = "+0 point";
     elAnswerPoints.className = "points-badge";
-    elAnswerExact.textContent = "Ce n’est pas la bonne réponse, réessayez.";
+    elAnswerExact.classList.remove("info-bubble");
+    elAnswerExact.textContent = shouldSkipRetryOnWrong(q)
+      ? "Pas de point pour cette question. On passe à la suivante."
+      : "Ce n’est pas la bonne réponse, réessayez.";
     elCoordinatesBlock.style.display = "none";
   }
 
   if (!result.correct) {
-    elNextBtn.textContent = "Réessayer ↺";
+    const isLast = currentIndex >= QUESTIONS.length - 1;
+    if (shouldSkipRetryOnWrong(q)) {
+      elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
+    } else {
+      elNextBtn.textContent = "Réessayer ↺";
+    }
   } else {
     const isLast = currentIndex >= QUESTIONS.length - 1;
     elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
@@ -439,9 +592,20 @@ function renderNextBlock(block) {
 }
 
 elNextBtn.addEventListener("click", () => {
+  const q = QUESTIONS[currentIndex];
   if (!currentAnswerCorrect) {
-    showScreen("question");
-    loadQuestion(currentIndex);
+    if (shouldSkipRetryOnWrong(q)) {
+      currentIndex += 1;
+      if (currentIndex >= QUESTIONS.length) {
+        showResultScreen();
+      } else {
+        showScreen("question");
+        loadQuestion(currentIndex);
+      }
+    } else {
+      showScreen("question");
+      loadQuestion(currentIndex);
+    }
     return;
   }
 
@@ -497,6 +661,45 @@ function formatPoints(value) {
   return "+0 points";
 }
 
+function shouldSkipRetryOnWrong(q) {
+  return q.section === "Vrai/Faux" || q.noRetryOnWrong === true;
+}
+
+function getQuestionOptions(q) {
+  if (!Array.isArray(q.options)) return [];
+  const shuffled = shuffleArray(q.options);
+  return shuffled.map((value) => ({ value, label: formatOptionLabel(value) }));
+}
+
+function formatOptionLabel(value) {
+  return String(value).replace(/\s*\([^)]*\)\s*/gu, " ").replace(/\s{2,}/gu, " ").trim();
+}
+
+function getAnswerBubbleText(q) {
+  if (q.answerBubble) return `💡 ${q.answerBubble}`;
+  const fromAnswer = extractParenthetical(getAnswerDisplay(q));
+  if (fromAnswer) return `💡 ${fromAnswer}`;
+  return "";
+}
+
+function extractParenthetical(value) {
+  const matches = Array.from(String(value || "").matchAll(/\(([^)]+)\)/gu), (match) => match[1].trim()).filter(Boolean);
+  return matches.join(" · ");
+}
+
+function shuffleArray(values) {
+  const arr = [...values];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function findButtonByValue(container, value) {
+  return Array.from(container.children).find((btn) => btn.dataset.value === value) ?? null;
+}
+
 function normalise(str) {
   return str
     .toLowerCase()
@@ -533,7 +736,7 @@ function getAnswerDisplay(q) {
 
 function getCachedRegex(pattern) {
   if (!answerRegexCache.has(pattern)) {
-    answerRegexCache.set(pattern, new RegExp(pattern, "u"));
+    answerRegexCache.set(pattern, new RegExp(pattern, "iu"));
   }
   return answerRegexCache.get(pattern);
 }
