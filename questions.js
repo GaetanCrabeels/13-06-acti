@@ -233,10 +233,10 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est son totem ?",
-    options: ["Eyra?", "Erya", "Eyrah", "Ayra"],
+    options: ["Eyra ?", "Erya", "Eyrah", "Ayra"],
     answer: "Eyra",
-    answers: ["Eyra?", "Eyra"],
-    answerDisplay: "Eyra?",
+    answers: ["Eyra ?", "Eyra?", "Eyra"],
+    answerDisplay: "Eyra ?",
     points: 0,
   },
   {
