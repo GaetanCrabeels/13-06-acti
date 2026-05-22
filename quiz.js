@@ -180,6 +180,15 @@ function showScreen(name) {
 }
 
 function loadQuestion(index) {
+  if (index < START_QUESTION_INDEX) {
+    currentIndex = START_QUESTION_INDEX;
+    index = START_QUESTION_INDEX;
+  }
+  if (index >= QUESTIONS.length) {
+    showResultScreen();
+    return;
+  }
+
   clearAutoAdvance();
   answered = false;
   currentAnswerCorrect = false;
@@ -1222,6 +1231,6 @@ function updateMolkkyLiveTotal() {
     0
   );
   const total = exactBonus + objectivesBonus;
-  const scoreLabel = safeScore == null ? "—" : String(safeScore);
+  const scoreLabel = safeScore === null ? "—" : String(safeScore);
   elMolkkyLiveTotal.textContent = `Total live : ${total} points (score saisi : ${scoreLabel})`;
 }
