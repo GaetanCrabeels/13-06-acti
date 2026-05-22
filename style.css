@@ -538,6 +538,52 @@ body {
   color: var(--clr-primary-dark);
   padding: 8px 12px;
   border-radius: 10px;
+  text-align: left;
+}
+
+.answer-exact.info-bubble-detailed {
+  display: block;
+  background: linear-gradient(145deg, #edf5ed 0%, #f7fbf7 100%);
+  border: 1px solid #bcd5bc;
+  border-left: 4px solid var(--clr-primary);
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+
+.answer-detail-wrap {
+  display: grid;
+  gap: 10px;
+}
+
+.answer-detail-intro {
+  font-weight: 800;
+  color: var(--clr-primary-dark);
+  margin: 0;
+}
+
+.answer-detail-block {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #d8e7d8;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.answer-detail-text {
+  margin: 0;
+  line-height: 1.55;
+  color: #1f3f1f;
+}
+
+.answer-detail-list {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.answer-detail-list li {
+  line-height: 1.5;
 }
 
 #free-input {
