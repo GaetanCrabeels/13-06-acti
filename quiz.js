@@ -822,16 +822,18 @@ function setAnswerExactContent(text, q, asBubble) {
   }
 
   const bubbleText = String(text || "");
-  elAnswerExact.innerHTML = formatAnswerBubbleHtml(bubbleText, q);
   elAnswerExact.classList.add("info-bubble");
-  elAnswerExact.classList.toggle("info-bubble-detailed", q?.section === "Vrai/Faux");
-}
-
-function formatAnswerBubbleHtml(text, q) {
-  if (q?.section !== "Vrai/Faux") {
-    return `💡 ${escapeHtml(text)}`;
+  if (q?.section === "Vrai/Faux") {
+    elAnswerExact.innerHTML = formatAnswerBubbleHtml(bubbleText);
+    elAnswerExact.classList.add("info-bubble-detailed");
+    return;
   }
 
+  elAnswerExact.textContent = `💡 ${bubbleText}`;
+  elAnswerExact.classList.remove("info-bubble-detailed");
+}
+
+function formatAnswerBubbleHtml(text) {
   const sections = text
     .split(/\n{2,}/u)
     .map((section) => section.trim())
