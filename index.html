@@ -64,13 +64,24 @@
 
           <div id="mcq-options"></div>
 
+          <form id="molkky-form" style="display:none;">
+            <input
+              id="molkky-score-input"
+              type="number"
+              min="0"
+              inputmode="numeric"
+              placeholder="Score atteint…"
+            />
+            <div class="molkky-objectives">
+              <p class="molkky-objectives-title">Objectifs annexes validés</p>
+              <div id="molkky-objectives-list" class="molkky-objectives-list"></div>
+            </div>
+            <button id="molkky-submit" type="button" class="btn btn-primary">Valider</button>
+          </form>
+
           <div id="match-form" class="match-form" style="display:none;">
             <p class="match-help">Sélectionnez une commune puis sa démographie pour tracer un fil.</p>
-            <div id="match-board" class="match-board">
-              <div id="match-left" class="match-column"></div>
-              <svg id="match-lines" class="match-lines"></svg>
-              <div id="match-right" class="match-column"></div>
-            </div>
+            <div id="match-rows" class="match-rows"></div>
             <button id="match-submit" type="button" class="btn btn-primary">Valider les liaisons</button>
           </div>
 
