@@ -74,7 +74,7 @@ const QUESTIONS = [
     type: "free",
     question:
       "Dans le silence paisible des sentiers apprivoisés, là où ni moteurs pressés ni tumulte ne viennent troubler la lente respiration du paysage, vous avancez sur un ruban discret qui enlace la nature et guide les voyageurs patients. Dites-moi, sous vos pas et au fil de cette voie dédiée aux marcheurs et aux cyclistes rêveurs, quel est le nombre secret qui baptise ce chemin où le temps semble suspendu ?",
-    answerPattern: "109",
+    answerPattern: "^.*109.*$",
     points: 0,
     nextBlock: {
       title: "Lieu validé",
