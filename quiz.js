@@ -18,6 +18,12 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
+const START_QUESTION_INDEX = (() => {
+  const stepTwoIndex = QUESTIONS.findIndex((question) => typeof question.stage === "string" && question.stage.startsWith("Étape 2"));
+  return stepTwoIndex >= 0 ? stepTwoIndex : 0;
+})();
+const QUIZ_TOTAL = Math.max(1, QUESTIONS.length - START_QUESTION_INDEX);
+const MOLKKY_LIVE_SOURCE = QUESTIONS.find((question) => question.kind === "molkky-start") ?? null;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
   const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
   return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
@@ -26,6 +32,7 @@ let henryRemaining = HENRY_STARTING_SCORE;
 let henryInterval = null;
 let henryStarted = false;
 let henryAwarded = false;
+let molkkyLiveSelectedObjectives = new Set();
 
 const screens = {
   start: document.getElementById("screen-start"),
@@ -88,6 +95,10 @@ const elMissionsTab = document.getElementById("missions-tab");
 const elObjectivesPanel = document.getElementById("objectives-panel");
 const elMissionsPanel = document.getElementById("missions-panel");
 const elObjectivesContent = document.getElementById("objectives-content");
+const elMolkkyLiveCard = document.getElementById("molkky-live-card");
+const elMolkkyLiveScoreInput = document.getElementById("molkky-live-score-input");
+const elMolkkyLiveObjectivesList = document.getElementById("molkky-live-objectives-list");
+const elMolkkyLiveTotal = document.getElementById("molkky-live-total");
 const objectiveCards = [
   {
     title: "Mölkky coopératif",
@@ -111,6 +122,7 @@ const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
+setupMolkkyLiveCard();
 updateObjectivesPanel();
 
 function toggleFloatingPanel(panel, button, otherPanel, otherButton) {
@@ -142,7 +154,7 @@ function updateObjectivesPanel() {
 }
 
 function startQuiz() {
-  currentIndex = 0;
+  currentIndex = START_QUESTION_INDEX;
   score = 0;
   answered = false;
   currentAnswerCorrect = false;
@@ -178,8 +190,8 @@ function loadQuestion(index) {
   matchRightChoices = [];
 
   const q = currentQuestion;
-  elQuestionNumber.textContent = index + 1;
-  elQuestionTotal.textContent = QUESTIONS.length;
+  elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
+  elQuestionTotal.textContent = QUIZ_TOTAL;
   updateScoreUI();
   elStageLabel.textContent = q.stage;
   elSection.textContent = q.section;
@@ -495,6 +507,7 @@ function configureHint(q) {
     elHintBtn.disabled = false;
     elHintBtn.setAttribute("aria-expanded", "false");
     elHintBtn.title = "Afficher l’indice";
+    elHintBtn.textContent = "💡 Indice";
     return;
   }
 
@@ -502,7 +515,9 @@ function configureHint(q) {
   const alreadyUsed = usedHints.has(q.id);
   elHintBtn.disabled = alreadyUsed;
   elHintBtn.setAttribute("aria-expanded", alreadyUsed ? "true" : "false");
-  elHintBtn.title = q.hint.label || "Afficher l’indice";
+  const hintLabel = q.hint.label || "Indice";
+  elHintBtn.title = hintLabel;
+  elHintBtn.textContent = `💡 ${hintLabel}`;
   elHintText.textContent = q.hint.text;
   elHintText.classList.toggle("visible", alreadyUsed);
   const hintImage = typeof q.hint.image === "string" ? q.hint.image.trim() : "";
@@ -1156,4 +1171,57 @@ function getCachedRegex(pattern) {
     answerRegexCache.set(pattern, new RegExp(pattern, "iu"));
   }
   return answerRegexCache.get(pattern);
+}
+
+function setupMolkkyLiveCard() {
+  if (!elMolkkyLiveCard || !elMolkkyLiveScoreInput || !elMolkkyLiveObjectivesList || !elMolkkyLiveTotal) return;
+  if (!MOLKKY_LIVE_SOURCE) {
+    elMolkkyLiveCard.style.display = "none";
+    return;
+  }
+
+  const objectives = Array.isArray(MOLKKY_LIVE_SOURCE.objectives) ? MOLKKY_LIVE_SOURCE.objectives : [];
+  elMolkkyLiveObjectivesList.innerHTML = "";
+  objectives.forEach((objective, index) => {
+    const label = document.createElement("label");
+    label.className = "molkky-check";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.dataset.index = String(index);
+    input.value = String(objective.points ?? 0);
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        molkkyLiveSelectedObjectives.add(index);
+      } else {
+        molkkyLiveSelectedObjectives.delete(index);
+      }
+      updateMolkkyLiveTotal();
+    });
+
+    const text = document.createElement("span");
+    text.textContent = `${objective.label} (+${objective.points ?? 0} pts)`;
+
+    label.appendChild(input);
+    label.appendChild(text);
+    elMolkkyLiveObjectivesList.appendChild(label);
+  });
+
+  elMolkkyLiveScoreInput.addEventListener("input", updateMolkkyLiveTotal);
+  updateMolkkyLiveTotal();
+}
+
+function updateMolkkyLiveTotal() {
+  if (!MOLKKY_LIVE_SOURCE || !elMolkkyLiveTotal || !elMolkkyLiveScoreInput) return;
+  const reachedScore = Number.parseInt(elMolkkyLiveScoreInput.value, 10);
+  const safeScore = Number.isFinite(reachedScore) && reachedScore >= 0 ? reachedScore : null;
+  const exactBonus = safeScore === MOLKKY_LIVE_SOURCE.targetScore ? MOLKKY_LIVE_SOURCE.points ?? 0 : 0;
+  const objectives = Array.isArray(MOLKKY_LIVE_SOURCE.objectives) ? MOLKKY_LIVE_SOURCE.objectives : [];
+  const objectivesBonus = Array.from(molkkyLiveSelectedObjectives).reduce(
+    (total, index) => total + Number(objectives[index]?.points ?? 0),
+    0
+  );
+  const total = exactBonus + objectivesBonus;
+  const scoreLabel = safeScore == null ? "—" : String(safeScore);
+  elMolkkyLiveTotal.textContent = `Total live : ${total} points (score saisi : ${scoreLabel})`;
 }

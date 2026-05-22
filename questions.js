@@ -175,6 +175,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quelle guerre a-t-il vécue ?",
+    instructions:
+      "Règle Henryesque : pour marquer, choisissez une mauvaise réponse. Capital initial : 500 points, -1 point par seconde et -15 points chaque fois que vous cliquez sur une vraie réponse.",
     options: ["La guerre de Chypre", "La guerre de Corée", "La guerre d’Algérie"],
     answer: "La guerre de Chypre",
     points: 0,
