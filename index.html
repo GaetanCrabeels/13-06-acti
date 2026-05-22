@@ -65,18 +65,20 @@
           <div id="mcq-options"></div>
 
           <form id="molkky-form" style="display:none;">
+            <label for="molkky-score-input" class="slider-label">Score atteint</label>
             <input
               id="molkky-score-input"
               type="number"
               min="0"
               inputmode="numeric"
               placeholder="Score atteint…"
+              aria-label="Score atteint"
             />
             <div class="molkky-objectives">
               <p class="molkky-objectives-title">Objectifs annexes validés</p>
               <div id="molkky-objectives-list" class="molkky-objectives-list"></div>
             </div>
-            <button id="molkky-submit" type="button" class="btn btn-primary">Valider</button>
+            <button id="molkky-submit" type="button" class="btn btn-primary" aria-label="Submit Mölkky score and objectives">Valider</button>
           </form>
 
           <div id="match-form" class="match-form" style="display:none;">
