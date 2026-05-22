@@ -18,7 +18,7 @@ const QUESTIONS = [
     objectives: [
       { label: "Faire tomber exactement 3 quilles", points: 100 },
       { label: "Faire 12 points au premier coup", points: 100 },
-      { label: "Faire tomber la quille 1, puis 2, puis 3…", points: 100 },
+      { label: "Faire tomber les quilles 1 puis 2 puis 3 dans cet ordre", points: 100 },
     ],
     nextBlock: {
       title: "Prochaine coordonnée",
