@@ -14,6 +14,7 @@ const answerRegexCache = new Map();
 const usedHints = new Set();
 
 const HENRY_STARTING_SCORE = 800;
+const HENRY_REVEAL_DELAY = 900;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
 let henryRemaining = HENRY_STARTING_SCORE;
 let henryInterval = null;
@@ -479,6 +480,11 @@ function handleMcqAnswer(selected, q) {
   }
   highlightMcqOptions(selected, q, result.correct);
 
+  if (q.kind === "henry") {
+    handleHenryAnswer(result, q);
+    return;
+  }
+
   setTimeout(() => showAnswerScreen(result, q), 300);
 }
 
@@ -492,14 +498,12 @@ function highlightMcqOptions(selected, q, isCorrect) {
 
     if (q.kind === "henry") {
       const isRealAnswer = isHenryCorrectAnswer(q, btn.dataset.value);
-      if (isRealAnswer) {
-        btn.classList.add("wrong");
-      }
       if (btn.dataset.value === selected && isCorrect) {
-        btn.classList.add("correct");
+        btn.classList.add("selected");
       } else if (btn.dataset.value === selected && !isCorrect) {
         btn.classList.add("wrong");
       }
+      if (isRealAnswer) btn.classList.add("henry-reveal");
       return;
     }
 
@@ -542,6 +546,26 @@ function handleTimeout() {
   }
 
   showAnswerScreen({ correct: false, addedPoints: 0, answerDisplay: getAnswerDisplay(q), timeout: true }, q);
+}
+
+function handleHenryAnswer(result, q) {
+  clearAutoAdvance();
+  currentAnswerCorrect = result.correct;
+
+  if (result.correct && q.henryFinal && !henryAwarded) {
+    score += henryRemaining;
+    henryAwarded = true;
+    updateScoreUI();
+  }
+
+  const nextQuestion = QUESTIONS[currentIndex + 1];
+  if (q.henryFinal || !isHenryQuestion(nextQuestion)) {
+    stopHenryTimer();
+  }
+
+  autoAdvanceTimeout = window.setTimeout(() => {
+    advanceToNextQuestion();
+  }, HENRY_REVEAL_DELAY);
 }
 
 function evaluateAnswer(q, value) {
@@ -637,10 +661,16 @@ function showAnswerScreen(result, q) {
     elAnswerTitle.textContent = getAnswerTitle(q, result);
     elAnswerPoints.textContent = q.kind === "henry" ? "Henry : -10 pts" : "+0 point";
     elAnswerPoints.className = "points-badge";
-    elAnswerExact.classList.remove("info-bubble");
-    elAnswerExact.textContent = shouldSkipRetryOnWrong(q)
-      ? getWrongAnswerText(q, result)
-      : "Ce n’est pas la bonne réponse, réessayez.";
+    const bubbleText = getAnswerBubbleText(q, result);
+    if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
+      elAnswerExact.textContent = bubbleText;
+      elAnswerExact.classList.add("info-bubble");
+    } else {
+      elAnswerExact.classList.remove("info-bubble");
+      elAnswerExact.textContent = shouldSkipRetryOnWrong(q)
+        ? getWrongAnswerText(q, result)
+        : "Ce n’est pas la bonne réponse, réessayez.";
+    }
     elCoordinatesBlock.style.display = "none";
   }
 
@@ -682,13 +712,7 @@ elNextBtn.addEventListener("click", () => {
   const q = QUESTIONS[currentIndex];
   if (!currentAnswerCorrect) {
     if (shouldSkipRetryOnWrong(q)) {
-      currentIndex += 1;
-      if (currentIndex >= QUESTIONS.length) {
-        showResultScreen();
-      } else {
-        showScreen("question");
-        loadQuestion(currentIndex);
-      }
+      advanceToNextQuestion();
     } else {
       showScreen("question");
       loadQuestion(currentIndex);
@@ -696,13 +720,7 @@ elNextBtn.addEventListener("click", () => {
     return;
   }
 
-  currentIndex += 1;
-  if (currentIndex >= QUESTIONS.length) {
-    showResultScreen();
-  } else {
-    showScreen("question");
-    loadQuestion(currentIndex);
-  }
+  advanceToNextQuestion();
 });
 
 function showResultScreen() {
@@ -759,6 +777,16 @@ function clearAutoAdvance() {
   }
 }
 
+function advanceToNextQuestion() {
+  currentIndex += 1;
+  if (currentIndex >= QUESTIONS.length) {
+    showResultScreen();
+    return;
+  }
+  showScreen("question");
+  loadQuestion(currentIndex);
+}
+
 function looksLikeCoordinates(value) {
   return /\d+\.\d+\s*,\s*\d+\.\d+/.test(value);
 }
@@ -785,11 +813,16 @@ function formatOptionLabel(value) {
 
 function getAnswerBubbleText(q, result) {
   if (q.kind === "henry") return `💡 La vraie réponse à éviter était : ${getAnswerDisplay(q)}`;
-  if (result?.answerDisplay) return result.answerDisplay;
   if (q.answerBubble) return `💡 ${q.answerBubble}`;
-  const fromAnswer = extractParenthetical(getAnswerDisplay(q));
+  const answerDisplay = getAnswerDisplay(q);
+  if (result?.answerDisplay && result.answerDisplay !== answerDisplay) return result.answerDisplay;
+  const fromAnswer = extractParenthetical(answerDisplay);
   if (fromAnswer) return `💡 ${fromAnswer}`;
   return "";
+}
+
+function shouldShowAnswerBubbleOnWrong(q) {
+  return q.section === "Vrai/Faux";
 }
 
 function getInstructionsText(q) {
@@ -802,7 +835,7 @@ function getInstructionsText(q) {
 
 function getAnswerTitle(q, result) {
   if (q.kind === "henry") {
-    return result.correct ? "Bien joué, vous avez évité la vraie réponse !" : "Raté, vous avez choisi la vraie réponse";
+    return result.correct ? "Réponse révélée" : "Mauvais choix";
   }
   if (result.timeout) return "Temps écoulé !";
   return result.correct ? "Bonne réponse !" : "Mauvaise réponse…";
