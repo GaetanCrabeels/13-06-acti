@@ -362,6 +362,10 @@ body {
   color: var(--clr-wrong);
 }
 
+.option-btn.henry-reveal {
+  animation: henry-reveal 0.3s ease-in-out 3;
+}
+
 .option-btn.selected {
   border-color: var(--clr-primary);
   background: #edf5ed;
@@ -371,6 +375,18 @@ body {
 
 .option-btn:disabled {
   cursor: default;
+}
+
+@keyframes henry-reveal {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(39, 174, 96, 0);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.3);
+    transform: translateY(-1px);
+  }
 }
 
 #free-form {
