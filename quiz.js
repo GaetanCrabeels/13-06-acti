@@ -654,8 +654,7 @@ function showAnswerScreen(result, q) {
     elAnswerPoints.textContent = formatPoints(addedPoints);
     elAnswerPoints.className = `points-badge ${addedPoints === 0 ? "" : addedPoints > 0 ? "gain" : "loss"}`.trim();
     const bubbleText = getAnswerBubbleText(q, result);
-    elAnswerExact.textContent = bubbleText;
-    elAnswerExact.classList.toggle("info-bubble", Boolean(bubbleText));
+    setAnswerExactContent(bubbleText, q, Boolean(bubbleText));
     renderNextBlock(q.nextBlock);
   } else {
     elAnswerIcon.textContent = result.timeout ? "⏰" : "❌";
@@ -665,24 +664,16 @@ function showAnswerScreen(result, q) {
     elAnswerPoints.className = "points-badge";
     const bubbleText = getAnswerBubbleText(q, result);
     if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
-      elAnswerExact.textContent = bubbleText;
-      elAnswerExact.classList.add("info-bubble");
+      setAnswerExactContent(bubbleText, q, true);
     } else {
-      elAnswerExact.classList.remove("info-bubble");
-      elAnswerExact.textContent = shouldSkipRetryOnWrong(q)
-        ? getWrongAnswerText(q, result)
-        : "Ce n’est pas la bonne réponse, réessayez.";
+      setAnswerExactContent(getWrongAnswerText(q, result), q, false);
     }
     elCoordinatesBlock.style.display = "none";
   }
 
   if (!result.correct) {
     const isLast = currentIndex >= QUESTIONS.length - 1;
-    if (shouldSkipRetryOnWrong(q)) {
-      elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
-    } else {
-      elNextBtn.textContent = "Réessayer ↺";
-    }
+    elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
   } else {
     const isLast = currentIndex >= QUESTIONS.length - 1;
     elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
@@ -800,7 +791,7 @@ function formatPoints(value) {
 }
 
 function shouldSkipRetryOnWrong(q) {
-  return q.section === "Vrai/Faux" || q.noRetryOnWrong === true || q.timer > 0 || q.kind === "henry";
+  return true;
 }
 
 function getQuestionOptions(q) {
@@ -821,6 +812,86 @@ function getAnswerBubbleText(q, result) {
   const fromAnswer = extractParenthetical(answerDisplay);
   if (fromAnswer) return `💡 ${fromAnswer}`;
   return "";
+}
+
+function setAnswerExactContent(text, q, asBubble) {
+  if (!asBubble) {
+    elAnswerExact.textContent = text || "";
+    elAnswerExact.classList.remove("info-bubble", "info-bubble-detailed");
+    return;
+  }
+
+  const bubbleText = String(text || "");
+  elAnswerExact.classList.add("info-bubble");
+  if (q?.section === "Vrai/Faux") {
+    elAnswerExact.innerHTML = formatAnswerBubbleHtml(bubbleText);
+    elAnswerExact.classList.add("info-bubble-detailed");
+    return;
+  }
+
+  elAnswerExact.textContent = `💡 ${bubbleText}`;
+  elAnswerExact.classList.remove("info-bubble-detailed");
+}
+
+function formatAnswerBubbleHtml(text) {
+  const sections = text
+    .split(/\n{2,}/u)
+    .map((section) => section.trim())
+    .filter(Boolean);
+
+  const blocks = sections
+    .map((section) => {
+      const lines = section
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const groups = [];
+      let currentType = null;
+      let currentItems = [];
+
+      lines.forEach((line) => {
+        const isBullet = line.startsWith("• ");
+        const type = isBullet ? "bullet" : "text";
+        const value = isBullet ? line.slice(2).trim() : line;
+
+        if (type !== currentType && currentItems.length > 0) {
+          groups.push({ type: currentType, items: currentItems });
+          currentItems = [];
+        }
+
+        currentType = type;
+        currentItems.push(value);
+      });
+
+      if (currentItems.length > 0) {
+        groups.push({ type: currentType, items: currentItems });
+      }
+
+      const htmlGroups = groups
+        .map((group) => {
+          if (group.type === "bullet") {
+            const items = group.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+            return `<ul class="answer-detail-list">${items}</ul>`;
+          }
+
+          return `<p class="answer-detail-text">${group.items.map((item) => escapeHtml(item)).join(" ")}</p>`;
+        })
+        .join("");
+
+      return `<div class="answer-detail-block">${htmlGroups}</div>`;
+    })
+    .join("");
+
+  return `<div class="answer-detail-wrap"><p class="answer-detail-intro">💡 Explication détaillée</p>${blocks}</div>`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/gu, "&amp;")
+    .replace(/</gu, "&lt;")
+    .replace(/>/gu, "&gt;")
+    .replace(/"/gu, "&quot;")
+    .replace(/'/gu, "&#39;");
 }
 
 function shouldShowAnswerBubbleOnWrong(q) {
