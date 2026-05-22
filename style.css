@@ -941,31 +941,6 @@ body {
   gap: 6px;
 }
 
-.molkky-live-card {
-  margin-top: 12px;
-  display: grid;
-  gap: 10px;
-}
-
-#molkky-live-score-input {
-  width: 100%;
-  border: 2px solid var(--clr-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  font-family: var(--font-base);
-}
-
-#molkky-live-score-input:focus {
-  border-color: var(--clr-primary);
-  outline: none;
-}
-
-.molkky-live-total {
-  font-weight: 700;
-  color: var(--clr-primary-dark);
-}
-
 @media (max-width: 640px) {
   .quiz-header {
     flex-direction: column;

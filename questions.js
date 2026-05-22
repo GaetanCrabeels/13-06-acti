@@ -6,26 +6,6 @@
  */
 const QUESTIONS = [
   {
-    id: 1,
-    stage: "Étape 1 – Départ",
-    section: "Défi de départ",
-    kind: "molkky-start",
-    question: "Mölkky coopératif : quel score commun devez-vous atteindre exactement ?",
-    instructions: "Cochez les objectifs annexes que vous avez validés.",
-    targetScore: 50,
-    points: 1000,
-    objectives: [
-      { label: "Faire tomber exactement 3 quilles", points: 100 },
-      { label: "Faire 12 points au premier coup", points: 100 },
-      { label: "Faire tomber les quilles 1 puis 2 puis 3 dans cet ordre", points: 100 },
-    ],
-    nextBlock: {
-      title: "Prochaine coordonnée",
-      value: "50.191682, 4.383208",
-      label: "Étape 2 – Répondez d’abord au signe distinctif, puis à l’énigme.",
-    },
-  },
-  {
     id: 3,
     stage: "Étape 2 – 50.191682, 4.383208",
     section: "Signe distinctif",
