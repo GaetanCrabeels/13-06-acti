@@ -20,12 +20,15 @@
           <div class="start-rules">
             <h3>📋 Règles du jeu</h3>
             <ul>
-              <li>Récoltez un maximum de point pour décrocher la médaille d'or</li>
+              <li>Plusieurs rôles existent dans votre groupe : gens normaux, émissaire pour répondre aux questions et traîtres.</li>
+              <li>Récoltez un maximum de points pour décrocher la médaille d’or.</li>
+              <li>Pour les questions Henryesque, il faut volontairement choisir une mauvaise réponse pour marquer des points.</li>
+              <li>Utilisez les onglets permanents pour suivre les objectifs annexes et les missions supplémentaires.</li>
             </ul>
           </div>
 
           <button id="btn-start" class="btn btn-primary btn-full" style="margin-top:24px">
-           Commencer la balade
+           Commencer à la première coordonnée
           </button>
         </div>
       </section>
@@ -58,6 +61,9 @@
           <div id="hint-wrap" class="hint-wrap">
             <button id="hint-btn" type="button" class="btn btn-secondary"></button>
             <p id="hint-text" class="hint-text"></p>
+          </div>
+          <div id="hint-media" class="hint-media">
+            <img id="hint-image" class="hint-image" src="" alt="Indice visuel" />
           </div>
           <img id="question-image" class="question-image" src="" alt="" />
           <p id="question-text" class="question-text"></p>
@@ -104,6 +110,10 @@
             />
             <button id="free-submit" type="button" class="btn btn-primary">Valider</button>
           </form>
+
+          <div id="ack-form" style="display:none;">
+            <button id="ack-submit" type="button" class="btn btn-primary btn-full">OK</button>
+          </div>
         </div>
       </section>
 
@@ -147,6 +157,34 @@
           🔄 Recommencer
         </button>
       </section>
+    </div>
+
+    <div class="floating-tabs">
+      <div class="floating-tab-group objectives">
+        <button id="objectives-tab" class="floating-tab-button" type="button" aria-expanded="false" aria-controls="objectives-panel">
+          Objectifs annexes
+        </button>
+        <aside id="objectives-panel" class="floating-panel" aria-hidden="true">
+          <h3>Objectifs annexes</h3>
+          <div id="objectives-content" class="floating-panel-content"></div>
+        </aside>
+      </div>
+
+      <div class="floating-tab-group missions">
+        <button id="missions-tab" class="floating-tab-button" type="button" aria-expanded="false" aria-controls="missions-panel">
+          Missions annexes
+        </button>
+        <aside id="missions-panel" class="floating-panel" aria-hidden="true">
+          <h3>Missions annexes</h3>
+          <div class="floating-panel-content">
+            <ul class="floating-list">
+              <li>Photo avec : un objet spécifique, papa, un petit oiseau et votre reflet à tous dans l’eau du lac.</li>
+              <li>Tout le monde participe, mais seuls X doigts et X pieds doivent être visibles.</li>
+              <li>Colour hunt : faites un maximum de photos avec la couleur indiquée.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
     </div>
 
     <script src="questions.js"></script>
