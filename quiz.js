@@ -18,8 +18,11 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
+const STEP_TWO_STAGE_PREFIX = "Étape 2";
 const START_QUESTION_INDEX = (() => {
-  const stepTwoIndex = QUESTIONS.findIndex((question) => typeof question.stage === "string" && question.stage.startsWith("Étape 2"));
+  const stepTwoIndex = QUESTIONS.findIndex(
+    (question) => typeof question.stage === "string" && question.stage.startsWith(STEP_TWO_STAGE_PREFIX)
+  );
   return stepTwoIndex >= 0 ? stepTwoIndex : 0;
 })();
 const QUIZ_TOTAL = Math.max(1, QUESTIONS.length - START_QUESTION_INDEX);
@@ -1224,7 +1227,8 @@ function updateMolkkyLiveTotal() {
   if (!MOLKKY_LIVE_SOURCE || !elMolkkyLiveTotal || !elMolkkyLiveScoreInput) return;
   const reachedScore = Number.parseInt(elMolkkyLiveScoreInput.value, 10);
   const safeScore = Number.isFinite(reachedScore) && reachedScore >= 0 ? reachedScore : null;
-  const exactBonus = safeScore === MOLKKY_LIVE_SOURCE.targetScore ? MOLKKY_LIVE_SOURCE.points ?? 0 : 0;
+  const targetScore = Number(MOLKKY_LIVE_SOURCE.targetScore ?? Number.NaN);
+  const exactBonus = safeScore !== null && safeScore === targetScore ? MOLKKY_LIVE_SOURCE.points ?? 0 : 0;
   const objectives = Array.isArray(MOLKKY_LIVE_SOURCE.objectives) ? MOLKKY_LIVE_SOURCE.objectives : [];
   const objectivesBonus = Array.from(molkkyLiveSelectedObjectives).reduce(
     (total, index) => total + Number(objectives[index]?.points ?? 0),
