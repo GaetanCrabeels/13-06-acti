@@ -11,8 +11,7 @@ const QUESTIONS = [
     section: "Défi de départ",
     kind: "molkky-start",
     question: "Mölkky coopératif : quel score commun devez-vous atteindre exactement ?",
-    instructions:
-      "Cochez les objectifs annexes validés : faire tomber exactement 3 quilles ; faire 12 points au premier coup ; faire tomber la quille 1, puis 2, puis 3…",
+    instructions: "Cochez les objectifs annexes que vous avez validés.",
     targetScore: 50,
     points: 1000,
     objectives: [
