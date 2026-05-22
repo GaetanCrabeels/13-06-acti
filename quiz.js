@@ -18,7 +18,10 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
-const LEAF_OBJECTIVE_UNLOCK_INDEX = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
+const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
+  const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
+  return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
+})();
 let henryRemaining = HENRY_STARTING_SCORE;
 let henryInterval = null;
 let henryStarted = false;

@@ -359,7 +359,7 @@ const QUESTIONS = [
     type: "free",
     question:
       "Enracinés précisément au point qui vous a été confié, sans céder à la tentation de vous en éloigner, laissez votre regard explorer les signes qui s’offrent à vous sans faire un pas de plus : quels sont donc les noms des villages qui se révèlent, inscrits sur les panneaux visibles depuis ce lieu exact ?",
-    answerPattern: "^(?=.*\\berpion\\b)(?=.*\\bvirelles\\b).+$",
+    answerPattern: "^(?=.*\\berpion\\b)(?=.*\\bvirelles\\b).*$",
     points: 0,
     nextBlock: {
       title: "Lieu validé",
@@ -492,7 +492,7 @@ const QUESTIONS = [
     section: "Devinettes",
     type: "free",
     question: "Les lacs se trouvent à cheval sur deux provinces. Lesquelles ?",
-    answerPattern: "^(?=.*\\bnamur\\b)(?=.*\\bhainaut\\b).+$",
+    answerPattern: "^(?=.*\\bnamur\\b)(?=.*\\bhainaut\\b).*$",
     answerDisplay: "Province de Namur et Province de Hainaut",
     points: 250,
     timer: 20,
