@@ -132,8 +132,8 @@ function loadQuestion(index) {
 
 function renderQuestionInput(q) {
   elMcqOptions.innerHTML = "";
-  elMolkkyObjectivesList.innerHTML = "";
-  elMatchRows.innerHTML = "";
+  if (elMolkkyObjectivesList) elMolkkyObjectivesList.innerHTML = "";
+  if (elMatchRows) elMatchRows.innerHTML = "";
 
   if (q.kind === "molkky-start") {
     elMcqOptions.style.display = "none";
@@ -328,13 +328,15 @@ function updateSliderValueLabel(value, unit) {
   elRangeValue.textContent = `${value} ${unit}`.trim();
 }
 
-elMatchSubmit.addEventListener("click", submitMatchAnswer);
-elMolkkySubmit.addEventListener("click", submitMolkkyAnswer);
-elRangeInput.addEventListener("input", () => {
-  if (!currentQuestion || currentQuestion.kind !== "range-slider") return;
-  updateSliderValueLabel(elRangeInput.value, currentQuestion.slider?.unit || "");
-});
-elRangeSubmit.addEventListener("click", submitSliderAnswer);
+if (elMatchSubmit) elMatchSubmit.addEventListener("click", submitMatchAnswer);
+if (elMolkkySubmit) elMolkkySubmit.addEventListener("click", submitMolkkyAnswer);
+if (elRangeInput) {
+  elRangeInput.addEventListener("input", () => {
+    if (!currentQuestion || currentQuestion.kind !== "range-slider") return;
+    updateSliderValueLabel(elRangeInput.value, currentQuestion.slider?.unit || "");
+  });
+}
+if (elRangeSubmit) elRangeSubmit.addEventListener("click", submitSliderAnswer);
 
 function submitMolkkyAnswer() {
   if (answered) return;
