@@ -12,10 +12,16 @@ let matchRightChoices = [];
 let autoAdvanceTimeout = null;
 const answerRegexCache = new Map();
 const usedHints = new Set();
+const pointsByGroup = new Map();
 
-const HENRY_STARTING_SCORE = 800;
+const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
+const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
+const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
+  const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
+  return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
+})();
 let henryRemaining = HENRY_STARTING_SCORE;
 let henryInterval = null;
 let henryStarted = false;
@@ -40,6 +46,8 @@ const elSection = document.getElementById("question-section");
 const elInstructions = document.getElementById("question-instructions");
 const elQuestionText = document.getElementById("question-text");
 const elQuestionImage = document.getElementById("question-image");
+const elHintMedia = document.getElementById("hint-media");
+const elHintImage = document.getElementById("hint-image");
 const elMcqOptions = document.getElementById("mcq-options");
 const elMolkkyForm = document.getElementById("molkky-form");
 const elMolkkyScoreInput = document.getElementById("molkky-score-input");
@@ -55,6 +63,8 @@ const elRangeSubmit = document.getElementById("range-submit");
 const elFreeForm = document.getElementById("free-form");
 const elFreeInput = document.getElementById("free-input");
 const elFreeSubmit = document.getElementById("free-submit");
+const elAckForm = document.getElementById("ack-form");
+const elAckSubmit = document.getElementById("ack-submit");
 const elHintWrap = document.getElementById("hint-wrap");
 const elHintBtn = document.getElementById("hint-btn");
 const elHintText = document.getElementById("hint-text");
@@ -73,9 +83,63 @@ const elFinalScore = document.getElementById("final-score");
 const elFinalDetails = document.getElementById("final-details");
 const elFinalMessage = document.getElementById("final-message");
 const elRestartBtn = document.getElementById("btn-restart");
+const elObjectivesTab = document.getElementById("objectives-tab");
+const elMissionsTab = document.getElementById("missions-tab");
+const elObjectivesPanel = document.getElementById("objectives-panel");
+const elMissionsPanel = document.getElementById("missions-panel");
+const elObjectivesContent = document.getElementById("objectives-content");
+const objectiveCards = [
+  {
+    title: "Mölkky coopératif",
+    unlockIndex: 0,
+    items: [
+      "Atteindre exactement 50 points.",
+      "Objectifs annexes : faire tomber exactement 3 quilles, faire 12 points au premier coup, puis 1 / 2 / 3 dans l’ordre.",
+    ],
+  },
+  {
+    title: "Feuilles d’arbres",
+    unlockIndex: LEAF_OBJECTIVE_UNLOCK_INDEX,
+    items: [
+      "Rapportez un maximum de feuilles d’arbres différentes.",
+      "Comptage à l’arrivée : 50 points par feuille différente.",
+    ],
+  },
+];
 
 const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
+elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
+elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
+updateObjectivesPanel();
+
+function toggleFloatingPanel(panel, button, otherPanel, otherButton) {
+  const willOpen = !panel.classList.contains("open");
+  panel.classList.toggle("open", willOpen);
+  panel.setAttribute("aria-hidden", String(!willOpen));
+  button.setAttribute("aria-expanded", String(willOpen));
+  otherPanel.classList.remove("open");
+  otherPanel.setAttribute("aria-hidden", "true");
+  otherButton.setAttribute("aria-expanded", "false");
+}
+
+function updateObjectivesPanel() {
+  if (!elObjectivesContent) return;
+  const progressIndex = Math.max(0, currentIndex);
+  const unlockedObjectives = objectiveCards.filter((card) => progressIndex >= card.unlockIndex);
+  elObjectivesContent.innerHTML = unlockedObjectives
+    .map(
+      (card) => `
+        <section class="floating-objective">
+          <h4>${escapeHtml(card.title)}</h4>
+          <ul>
+            ${card.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </section>
+      `
+    )
+    .join("");
+}
 
 function startQuiz() {
   currentIndex = 0;
@@ -83,6 +147,7 @@ function startQuiz() {
   answered = false;
   currentAnswerCorrect = false;
   usedHints.clear();
+  pointsByGroup.clear();
   resetHenryStage();
   showScreen("question");
   loadQuestion(currentIndex);
@@ -99,6 +164,7 @@ function resetHenryStage() {
 function showScreen(name) {
   Object.values(screens).forEach((s) => s.classList.remove("active"));
   screens[name].classList.add("active");
+  updateObjectivesPanel();
 }
 
 function loadQuestion(index) {
@@ -121,19 +187,20 @@ function loadQuestion(index) {
   elInstructions.textContent = instructionsText;
   elInstructions.style.display = instructionsText ? "block" : "none";
   elQuestionText.textContent = q.question;
-
-  elQuestionImage.style.display = "none";
+  configureQuestionImage(q);
 
   configureHint(q);
   configureModeBadge(q);
   renderQuestionInput(q);
   configureTimer(q.timer);
+  updateObjectivesPanel();
 }
 
 function renderQuestionInput(q) {
   elMcqOptions.innerHTML = "";
   if (elMolkkyObjectivesList) elMolkkyObjectivesList.innerHTML = "";
   if (elMatchRows) elMatchRows.innerHTML = "";
+  elAckForm.style.display = "none";
 
   if (q.kind === "molkky-start") {
     elMcqOptions.style.display = "none";
@@ -162,6 +229,16 @@ function renderQuestionInput(q) {
     elFreeForm.style.display = "none";
     elSliderForm.style.display = "flex";
     renderSliderQuestion(q);
+    return;
+  }
+
+  if (q.kind === "acknowledgement") {
+    elMcqOptions.style.display = "none";
+    elMatchForm.style.display = "none";
+    elMolkkyForm.style.display = "none";
+    elSliderForm.style.display = "none";
+    elFreeForm.style.display = "none";
+    elAckForm.style.display = "block";
     return;
   }
 
@@ -204,6 +281,20 @@ function renderMolkkyQuestion(q) {
   });
 
   elMolkkyScoreInput.focus();
+}
+
+function configureQuestionImage(q) {
+  const imageSource = typeof q.image === "string" ? q.image.trim() : "";
+  if (!imageSource) {
+    elQuestionImage.removeAttribute("src");
+    elQuestionImage.alt = "";
+    elQuestionImage.style.display = "none";
+    return;
+  }
+
+  elQuestionImage.src = imageSource;
+  elQuestionImage.alt = q.imageAlt || "Illustration de la question";
+  elQuestionImage.style.display = "block";
 }
 
 function renderMcqOptions(q) {
@@ -309,8 +400,17 @@ function submitMatchAnswer() {
 
   answered = true;
   stopTimer();
-  const allCorrect = q.pairs.every((pair) => currentMatchLinks.get(pair.left) === pair.right);
-  showAnswerScreen({ correct: allCorrect, addedPoints: allCorrect ? q.points ?? 0 : 0 }, q);
+  const correctMatches = q.pairs.filter((pair) => currentMatchLinks.get(pair.left) === pair.right).length;
+  const addedPoints = correctMatches * (q.pointsPerMatch ?? 0);
+  showAnswerScreen(
+    {
+      correct: true,
+      addedPoints,
+      answerDisplay: `${correctMatches} bonne(s) liaison(s) sur ${q.pairs.length}.`,
+      customTitle: "Liaisons enregistrées",
+    },
+    q
+  );
 }
 
 function submitSliderAnswer() {
@@ -337,6 +437,25 @@ if (elRangeInput) {
   });
 }
 if (elRangeSubmit) elRangeSubmit.addEventListener("click", submitSliderAnswer);
+if (elAckSubmit) elAckSubmit.addEventListener("click", submitAcknowledgement);
+
+function submitAcknowledgement() {
+  if (answered) return;
+  const q = currentQuestion;
+  if (q.kind !== "acknowledgement") return;
+
+  answered = true;
+  stopTimer();
+  showAnswerScreen(
+    {
+      correct: true,
+      addedPoints: q.points ?? 0,
+      answerDisplay: q.answerDisplay,
+      customTitle: "Étape enregistrée",
+    },
+    q
+  );
+}
 
 function submitMolkkyAnswer() {
   if (answered) return;
@@ -370,6 +489,9 @@ function configureHint(q) {
     elHintWrap.style.display = "none";
     elHintText.textContent = "";
     elHintText.classList.remove("visible");
+    elHintMedia.classList.remove("visible");
+    elHintImage.removeAttribute("src");
+    elHintImage.alt = "";
     elHintBtn.disabled = false;
     elHintBtn.setAttribute("aria-expanded", "false");
     elHintBtn.title = "Afficher l’indice";
@@ -383,6 +505,16 @@ function configureHint(q) {
   elHintBtn.title = q.hint.label || "Afficher l’indice";
   elHintText.textContent = q.hint.text;
   elHintText.classList.toggle("visible", alreadyUsed);
+  const hintImage = typeof q.hint.image === "string" ? q.hint.image.trim() : "";
+  if (hintImage) {
+    elHintImage.src = hintImage;
+    elHintImage.alt = q.hint.imageAlt || "Indice visuel";
+    elHintMedia.classList.toggle("visible", alreadyUsed);
+  } else {
+    elHintMedia.classList.remove("visible");
+    elHintImage.removeAttribute("src");
+    elHintImage.alt = "";
+  }
 }
 
 elHintBtn.addEventListener("click", () => {
@@ -392,6 +524,7 @@ elHintBtn.addEventListener("click", () => {
   score += q.hint.penalty ?? 0;
   updateScoreUI();
   elHintText.classList.add("visible");
+  if (q.hint.image) elHintMedia.classList.add("visible");
   elHintBtn.setAttribute("aria-expanded", "true");
   elHintBtn.disabled = true;
 });
@@ -477,7 +610,7 @@ function handleMcqAnswer(selected, q) {
 
   const result = evaluateAnswer(q, selected);
   if (q.kind === "henry" && !result.correct && !henryAwarded) {
-    henryRemaining = Math.max(0, henryRemaining - 10);
+    henryRemaining = Math.max(0, henryRemaining - HENRY_WRONG_PENALTY);
     updateModeBadgeText();
   }
   highlightMcqOptions(selected, q, result.correct);
@@ -632,6 +765,24 @@ function evaluateAnswer(q, value) {
   };
 }
 
+function getQuestionGroupKey(q) {
+  return `${q.stage}::${q.section}`;
+}
+
+function addGroupPoints(q, value) {
+  const key = getQuestionGroupKey(q);
+  const previous = pointsByGroup.get(key) ?? 0;
+  pointsByGroup.set(key, previous + value);
+}
+
+function getGroupPoints(q) {
+  return pointsByGroup.get(getQuestionGroupKey(q)) ?? 0;
+}
+
+function shouldShowPointsBadge(q, addedPoints) {
+  return !(addedPoints === 0 && (q.section === "Signe distinctif" || q.kind === "acknowledgement"));
+}
+
 function showAnswerScreen(result, q) {
   clearAutoAdvance();
   if (isHenryQuestion(q)) stopHenryTimer();
@@ -647,12 +798,14 @@ function showAnswerScreen(result, q) {
 
   if (result.correct) {
     score += addedPoints;
+    addGroupPoints(q, addedPoints);
     updateScoreUI();
     elAnswerIcon.textContent = "✅";
     elAnswerIcon.className = "answer-icon correct";
     elAnswerTitle.textContent = result.customTitle || getAnswerTitle(q, result);
     elAnswerPoints.textContent = formatPoints(addedPoints);
     elAnswerPoints.className = `points-badge ${addedPoints === 0 ? "" : addedPoints > 0 ? "gain" : "loss"}`.trim();
+    elAnswerPoints.style.display = shouldShowPointsBadge(q, addedPoints) ? "inline-block" : "none";
     const bubbleText = getAnswerBubbleText(q, result);
     setAnswerExactContent(bubbleText, q, Boolean(bubbleText));
     renderNextBlock(q.nextBlock);
@@ -660,8 +813,9 @@ function showAnswerScreen(result, q) {
     elAnswerIcon.textContent = result.timeout ? "⏰" : "❌";
     elAnswerIcon.className = "answer-icon wrong";
     elAnswerTitle.textContent = getAnswerTitle(q, result);
-    elAnswerPoints.textContent = q.kind === "henry" ? "Henry : -10 pts" : "+0 point";
+    elAnswerPoints.textContent = q.kind === "henry" ? `Henry : -${HENRY_WRONG_PENALTY} pts` : "+0 point";
     elAnswerPoints.className = "points-badge";
+    elAnswerPoints.style.display = shouldShowPointsBadge(q, 0) ? "inline-block" : "none";
     const bubbleText = getAnswerBubbleText(q, result);
     if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
       setAnswerExactContent(bubbleText, q, true);
@@ -671,13 +825,13 @@ function showAnswerScreen(result, q) {
     elCoordinatesBlock.style.display = "none";
   }
 
-  if (!result.correct) {
-    const isLast = currentIndex >= QUESTIONS.length - 1;
-    elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
-  } else {
-    const isLast = currentIndex >= QUESTIONS.length - 1;
-    elNextBtn.textContent = isLast ? "Voir mon score 🏆" : "Question suivante →";
-  }
+  const isLast = currentIndex >= QUESTIONS.length - 1;
+  elNextBtn.textContent =
+    !result.correct && q.section === "Signe distinctif"
+      ? "Réessayer →"
+      : isLast
+        ? "Voir mon score 🏆"
+        : "Question suivante →";
 
   if (shouldAutoAdvance(q, result)) {
     autoAdvanceTimeout = window.setTimeout(() => {
@@ -723,7 +877,7 @@ function showResultScreen() {
   showScreen("result");
 
   elFinalScore.textContent = score;
-  elFinalDetails.textContent = "Total final avec bonus et malus variables.";
+  elFinalDetails.textContent = "Total sur le site, hors vérifications complémentaires à l’arrivée.";
 
   let message;
   if (score >= 5000) {
@@ -791,7 +945,7 @@ function formatPoints(value) {
 }
 
 function shouldSkipRetryOnWrong(q) {
-  return true;
+  return q.section !== "Signe distinctif";
 }
 
 function getQuestionOptions(q) {
@@ -805,12 +959,12 @@ function formatOptionLabel(value) {
 }
 
 function getAnswerBubbleText(q, result) {
-  if (q.kind === "henry") return `💡 La vraie réponse à éviter était : ${getAnswerDisplay(q)}`;
-  if (q.answerBubble) return `💡 ${q.answerBubble}`;
+  if (q.kind === "henry") return `La vraie réponse à éviter était : ${getAnswerDisplay(q)}`;
+  if (q.answerBubble) return q.answerBubble;
   const answerDisplay = getAnswerDisplay(q);
   if (result?.answerDisplay && result.answerDisplay !== answerDisplay) return result.answerDisplay;
   const fromAnswer = extractParenthetical(answerDisplay);
-  if (fromAnswer) return `💡 ${fromAnswer}`;
+  if (fromAnswer) return fromAnswer;
   return "";
 }
 
@@ -900,9 +1054,6 @@ function shouldShowAnswerBubbleOnWrong(q) {
 
 function getInstructionsText(q) {
   if (q.instructions) return q.instructions;
-  if (q.kind === "henry") {
-    return "Choisissez volontairement une proposition crédible mais fausse : il faut éviter la vraie réponse.";
-  }
   return "";
 }
 
@@ -916,7 +1067,10 @@ function getAnswerTitle(q, result) {
 
 function getWrongAnswerText(q, result) {
   if (q.kind === "henry") {
-    return "Vous avez cliqué sur la vraie réponse. Le chrono Henryesque est gelé jusqu’à la question suivante.";
+    return `Vous avez cliqué sur une vraie réponse. Le capital Henryesque perd ${HENRY_WRONG_PENALTY} points et continue jusqu’à la question suivante.`;
+  }
+  if (q.section === "Signe distinctif") {
+    return "Ce n’est pas encore ça. Réessayez sur place jusqu’à trouver le bon signe distinctif.";
   }
   if (result.timeout) {
     return "Pas de point pour cette question. On passe à la suivante.";
@@ -933,7 +1087,12 @@ function getResolvedNextBlock(block, q) {
       label: `Vous avez récolté ${henryRemaining} points lors des questions Henryesque. ${block.label || ""}`.trim(),
     };
   }
-  return block;
+
+  const summary = block.summaryTemplate
+    ? block.summaryTemplate.replace("{points}", String(getGroupPoints(q)))
+    : "";
+  const label = [summary, block.label].filter(Boolean).join(" ");
+  return { ...block, label };
 }
 
 function extractParenthetical(value) {

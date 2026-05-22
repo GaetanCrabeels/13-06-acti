@@ -278,6 +278,14 @@ body {
   display: block;
 }
 
+.hint-media {
+  display: none;
+}
+
+.hint-media.visible {
+  display: block;
+}
+
 .hint-icon-btn {
   width: 34px;
   height: 34px;
@@ -310,6 +318,15 @@ body {
   object-fit: cover;
   border-radius: 10px;
   display: none;
+}
+
+.hint-image {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--clr-border);
+  background: #fff;
 }
 
 .question-text {
@@ -392,6 +409,10 @@ body {
 #free-form {
   display: flex;
   gap: 10px;
+}
+
+#ack-form {
+  display: none;
 }
 
 #molkky-form {
@@ -818,6 +839,108 @@ body {
   display: block;
 }
 
+.floating-tabs {
+  position: fixed;
+  right: 0;
+  top: 120px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.floating-tab-group {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.floating-tab-button,
+.floating-panel {
+  pointer-events: auto;
+}
+
+.floating-tab-button {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  border: none;
+  border-radius: 12px 0 0 12px;
+  padding: 14px 10px;
+  min-height: 124px;
+  font: inherit;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.floating-tab-group.objectives .floating-tab-button {
+  background: var(--clr-primary);
+}
+
+.floating-tab-group.missions .floating-tab-button {
+  background: var(--clr-accent);
+}
+
+.floating-panel {
+  position: absolute;
+  right: 56px;
+  top: 0;
+  width: min(320px, calc(100vw - 88px));
+  background: var(--clr-surface);
+  border-radius: 16px 0 0 16px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  display: none;
+}
+
+.floating-panel.open {
+  display: block;
+}
+
+.floating-panel h3 {
+  font-size: 1rem;
+  color: var(--clr-primary-dark);
+  margin-bottom: 12px;
+}
+
+.floating-panel-content {
+  display: grid;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: var(--clr-text-muted);
+  line-height: 1.5;
+}
+
+.floating-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.floating-objective {
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f9f7f2;
+}
+
+.floating-objective h4 {
+  font-size: 0.95rem;
+  color: var(--clr-primary-dark);
+  margin-bottom: 8px;
+}
+
+.floating-objective ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
 @media (max-width: 640px) {
   .quiz-header {
     flex-direction: column;
@@ -838,6 +961,19 @@ body {
 
   .hint-wrap {
     width: 100%;
+  }
+
+  .floating-tabs {
+    top: auto;
+    bottom: 16px;
+  }
+
+  .floating-panel {
+    right: 52px;
+    top: auto;
+    bottom: 0;
+    max-height: 70vh;
+    overflow: auto;
   }
 }
 

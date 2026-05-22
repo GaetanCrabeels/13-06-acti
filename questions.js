@@ -32,6 +32,7 @@ const QUESTIONS = [
     type: "free",
     question:
       "Quel mot imaginaire est formé par les première lettres des panneaux directionnels que vous voyez?",
+    instructions: "Inscrivez les lettres dans l’ordre de lecture : de haut en bas puis de gauche à droite.",
     answer: "CVCDBC",
     points: 0,
     nextBlock: {
@@ -53,7 +54,7 @@ const QUESTIONS = [
       "501927264394856",
       "50 192726 4 394856",
     ],
-    points: 0,
+    points: 250,
     hint: {
       text: "Ce ne sont ni des mots ni des lettres.",
       penalty: -50,
@@ -73,7 +74,7 @@ const QUESTIONS = [
     type: "free",
     question:
       "Dans le silence paisible des sentiers apprivoisés, là où ni moteurs pressés ni tumulte ne viennent troubler la lente respiration du paysage, vous avancez sur un ruban discret qui enlace la nature et guide les voyageurs patients. Dites-moi, sous vos pas et au fil de cette voie dédiée aux marcheurs et aux cyclistes rêveurs, quel est le nombre secret qui baptise ce chemin où le temps semble suspendu ?",
-    answer: "109",
+    answerPattern: "^.*109.*$",
     points: 0,
     nextBlock: {
       title: "Lieu validé",
@@ -91,7 +92,7 @@ const QUESTIONS = [
     answer: "Faux",
     answerBubble:
       "En réalité, même si la pluie contribue au niveau de l’eau, ce n’est qu’une petite partie.\nLe lac est principalement alimenté par :\n• la rivière de l’Eau d’Heure\n• d’autres apports hydrauliques contrôlés.",
-    points: 250,
+    points: 150,
     timer: 20,
   },
   {
@@ -104,7 +105,7 @@ const QUESTIONS = [
     answer: "Faux",
     answerBubble:
       "C’est une idée qui revient souvent, mais ici :\n• aucun village complet n’a été englouti\n• il y avait surtout des terres agricoles, des bois et quelques bâtiments isolés.\n\nContrairement à d’autres barrages en Europe, il n’y a pas de « ville fantôme » sous l’eau ici, même si le mythe est tentant.\n\nExemples célèbres ailleurs en Europe :\n• Lac de Resia : un village submergé dans les années 1950, seul le clocher de l’église dépasse encore.\n• Embalse de Sau : un ancien village repose sous le lac, et quand le niveau baisse, les ruines réapparaissent.\n• Lac de Serre-Ponçon : plusieurs villages déplacés ou détruits, avec la chapelle Saint-Michel conservée au milieu des eaux.\n• Ladybower Reservoir : le village de Derwent a été englouti, et lors des sécheresses, des vestiges réapparaissent.",
-    points: 250,
+    points: 150,
     timer: 20,
   },
   {
@@ -117,7 +118,7 @@ const QUESTIONS = [
     answer: "Vrai",
     answerBubble:
       "Plusieurs lacs sont interconnectés : l’eau peut circuler entre eux selon les besoins grâce à des installations techniques.\nLe barrage de la Plate Taille joue un rôle central dans ce système.\n\nCela permet de gérer :\n• les niveaux d’eau\n• la production d’énergie\n• la sécurité hydraulique.",
-    points: 250,
+    points: 150,
     timer: 20,
   },
   {
@@ -129,7 +130,7 @@ const QUESTIONS = [
     options: ["Vrai", "Faux"],
     answer: "Faux",
     answerBubble: "Il s’agit d’un lac artificiel, créé par des barrages dans les années 1970.",
-    points: 250,
+    points: 150,
     timer: 20,
   },
   {
@@ -142,11 +143,12 @@ const QUESTIONS = [
     answer: "Vrai",
     answerBubble:
       "Oui : le niveau peut monter ou descendre en fonction de la gestion du réseau.\nLe site est lié à une centrale de pompage-turbinage (production d’électricité).\n\nEn résumé :\n• on stocke de l’eau quand il y a trop d’énergie\n• on la relâche pour produire de l’électricité quand il y a de la demande.",
-    points: 250,
+    points: 150,
     timer: 20,
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.201160, 4.387284",
+      summaryTemplate: "Avec cette épreuve, vous avez remporté {points} points !",
       label: "Étape 4 – Commencez par le signe distinctif, puis les questions Henryesque.",
     },
   },
@@ -164,7 +166,7 @@ const QUESTIONS = [
       title: "Lieu validé",
       value: "Questions Henryesque débloquées",
       label:
-        "Commencez le QCM chronométré : départ des points à 800, -1 point par seconde et -10 points par “mauvaise” réponse.",
+        "Commencez le QCM chronométré : pour marquer, choisissez une mauvaise réponse. Départ à 500 points, -1 point par seconde et -15 points par “mauvaise” réponse.",
     },
   },
   {
@@ -230,7 +232,7 @@ const QUESTIONS = [
     kind: "henry",
     question: "Quel sport pratique-t-il en salle ?",
     options: ["Badminton", "Padel", "Squash"],
-    answer: "Badminton",
+    answers: ["Badminton", "Padel"],
     points: 0,
   },
   {
@@ -331,7 +333,7 @@ const QUESTIONS = [
     kind: "henry",
     question: "À quel étage se trouvait sa chambre d’enfance ?",
     options: ["2ème", "2e", "1er"],
-    answer: "2ème",
+    answers: ["2ème", "2e"],
     points: 0,
   },
   {
@@ -357,7 +359,7 @@ const QUESTIONS = [
     type: "free",
     question:
       "Enracinés précisément au point qui vous a été confié, sans céder à la tentation de vous en éloigner, laissez votre regard explorer les signes qui s’offrent à vous sans faire un pas de plus : quels sont donc les noms des villages qui se révèlent, inscrits sur les panneaux visibles depuis ce lieu exact ?",
-    answer: "Erpion et Virelles",
+    answerPattern: "^(?=.*\\berpion\\b)(?=.*\\bvirelles\\b).*$",
     points: 0,
     nextBlock: {
       title: "Lieu validé",
@@ -378,7 +380,7 @@ const QUESTIONS = [
       "502057504363997",
       "50 205750 4 363997",
     ],
-    points: 0,
+    points: 250,
     hint: {
       text: "Un 3310 vous aurait été bien utile.",
       penalty: -50,
@@ -404,7 +406,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Devinettes débloquées",
-      label: "Restez sur place pour la série de devinettes (+250 points par bonne réponse).",
+      label: "Restez sur place pour la série de devinettes (20 secondes de chrono, +250 points par bonne réponse et 30 points par bonne liaison).",
     },
   },
   {
@@ -422,7 +424,7 @@ const QUESTIONS = [
     ],
     answer: "la Fagne et la Famenne (zone de transition)",
     points: 250,
-    timer: 25,
+    timer: 20,
   },
   {
     id: 32,
@@ -438,7 +440,7 @@ const QUESTIONS = [
     ],
     answer: "entre 200 et 300 mètres au-dessus du niveau de la mer",
     points: 250,
-    timer: 25,
+    timer: 20,
   },
   {
     id: 33,
@@ -467,7 +469,7 @@ const QUESTIONS = [
       { left: "Beaumont", right: "~7 000" },
       { left: "Sivry-Rance", right: "~4 800" },
     ],
-    points: 250,
+    pointsPerMatch: 30,
   },
   {
     id: 35,
@@ -490,14 +492,10 @@ const QUESTIONS = [
     section: "Devinettes",
     type: "free",
     question: "Les lacs se trouvent à cheval sur deux provinces. Lesquelles ?",
-    answers: [
-      "Province de Namur et Province de Hainaut",
-      "Namur et Hainaut",
-      "Hainaut et Namur",
-    ],
+    answerPattern: "^(?=.*\\bnamur\\b)(?=.*\\bhainaut\\b).*$",
     answerDisplay: "Province de Namur et Province de Hainaut",
     points: 250,
-    timer: 25,
+    timer: 20,
   },
   {
     id: 37,
@@ -509,7 +507,7 @@ const QUESTIONS = [
     options: ["Les poissons", "Les moutons", "Les chèvres", "Les chevaux"],
     answer: "Les poissons",
     points: 250,
-    timer: 25,
+    timer: 20,
   },
   {
     id: 38,
@@ -526,7 +524,7 @@ const QUESTIONS = [
     ],
     answer: "l’industrie (sidérurgie, notamment dans le bassin de Charleroi)",
     points: 250,
-    timer: 25,
+    timer: 20,
   },
   {
     id: 39,
@@ -581,51 +579,31 @@ const QUESTIONS = [
   {
     id: 42,
     stage: "Étape 7 – 50.188382, 4.346416",
-    section: "Signe distinctif",
-    type: "free",
-    question: "Combien de mètres de berges voyez-vous ?",
-    instructions: "Tout nombre sera bon.",
-    answerPattern: "^\\d+(?:[.,]\\d+)?$",
-    answerDisplay: "Tout nombre était accepté.",
+    section: "Épreuve feuilles",
+    kind: "acknowledgement",
+    question: "Rapportez un maximum de feuilles d’arbres différentes : elles seront comptées à l’arrivée.",
+    instructions:
+      "Chaque feuille différente vaut 50 points. Appuyez simplement sur OK pour afficher la prochaine coordonnée.",
+    answerDisplay: "Épreuve feuilles enregistrée.",
     points: 0,
     nextBlock: {
-      title: "Lieu validé",
-      value: "Bonus feuilles débloqué",
-      label: "Renseignez maintenant combien de feuilles / espèces différentes vous rapportez.",
+      title: "Prochaine coordonnée",
+      value: "50.186963, 4.374291",
+      label: "Étape 8 – L’objet caché sera vérifié en réel à l’arrivée.",
     },
   },
   {
     id: 43,
-    stage: "Étape 7 – 50.188382, 4.346416",
-    section: "Bonus nature",
-    type: "free",
-    kind: "numeric-bonus",
-    question: "Combien de feuilles / espèces d’arbre différentes rapportez-vous à partir de là ?",
-    instructions:
-      "Chaque feuille / espèce d’arbre différente vous fait remporter 250 points.",
-    answerPattern: "^\\d+$",
-    answerDisplay: "Bonus feuilles enregistré.",
-    unitPoints: 250,
-    nextBlock: {
-      title: "Prochaine coordonnée",
-      value: "50.186963, 4.374291",
-      label: "Étape 8 – Retrouvez l’objet caché dans les environs.",
-    },
-  },
-  {
-    id: 44,
     stage: "Étape 8 – 50.186963, 4.374291",
     section: "Objet caché",
-    type: "free",
-    question: "Retrouver un objet caché dans les environs : qu’avez-vous trouvé ?",
-    instructions: "La réponse est libre pour valider que l’objet a bien été retrouvé.",
-    acceptAny: true,
-    answerDisplay: "Objet caché signalé.",
-    points: 0,
+    kind: "acknowledgement",
+    question: "Retrouvez l’objet caché dans les environs : sa présence sera vérifiée en réel à l’arrivée.",
+    instructions: "Appuyez sur OK pour passer au dernier choix.",
+    answerDisplay: "Objet caché à vérifier à l’arrivée.",
     nextBlock: {
       title: "Dernier choix",
       value: "Valeur des points",
-      label: "Celui qui le retrouvera décide si la valeur des points sera positive ou négative (500 points).",
+      label: "Si l’objet a été retrouvé, choisissez si la valeur finale des points sera positive ou négative (500 points).",
     },
   },
   {
