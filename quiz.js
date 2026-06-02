@@ -847,7 +847,7 @@ function evaluateAnswer(q, value) {
         wrongMessage: absurdValue && q.absurdWrongMessage ? q.absurdWrongMessage : q.outOfRangeMessage,
       };
     }
-    const computedPoints = Math.round(count * (q.unitPoints ?? 0));
+    const computedPoints = Number((count * (q.unitPoints ?? 0)).toFixed(2));
     return {
       correct: true,
       addedPoints: computedPoints,
@@ -1024,7 +1024,10 @@ function showResultScreen() {
   } else if (scoreRatio >= 0.65) {
     medal = "🥈 Médaille d’argent";
     message = "Très belle progression : encore un petit effort pour viser l’or.";
-  } else if (scoreRatio <= 0.5) {
+  } else if (scoreRatio < 0.65 && scoreRatio > 0.5) {
+    medal = "🥉 Médaille de bronze";
+    message = "Parcours solide : vous êtes proche du niveau argent, continuez comme ça.";
+  } else {
     medal = "🥉 Médaille de bronze";
     message = "Vous avez tenu jusqu’au bout : prochaine tentative, vous grimperez vite.";
   }
@@ -1116,8 +1119,10 @@ function getDisplayStageLabel(stageText) {
 }
 
 function formatPoints(value) {
-  if (value > 0) return `+${value} points`;
-  if (value < 0) return `${value} points`;
+  const formattedValue =
+    Number.isInteger(value) ? String(value) : String(Number(value).toFixed(2)).replace(/\.?0+$/u, "");
+  if (value > 0) return `+${formattedValue} points`;
+  if (value < 0) return `${formattedValue} points`;
   return "+0 points";
 }
 

@@ -426,7 +426,7 @@ const QUESTIONS = [
     timer: 20,
     easterEgg: {
       icon: "🔥",
-      text: "ça va ? Votre 4g n'a pas trop chauffée?",
+      text: "ça va ? Votre 4g n'a pas trop chauffé ?",
     },
   },
   {
