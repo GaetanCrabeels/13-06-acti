@@ -26,7 +26,7 @@ const QUESTIONS = [
     stage: "Étape 2 – 50.191682, 4.383208",
     section: "Énigme",
     type: "free",
-    question: "E0 . AI BGF D . CID HEF",
+    question: "E0 . AIB GBF D . CID HEF",
     instructions: "Possibilité d’indice (fait perdre 50 points).",
     answers: [
       "50.192726, 4.394856",
