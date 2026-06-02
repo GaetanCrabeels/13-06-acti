@@ -18,6 +18,9 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
+const ABSURD_VALUE_MULTIPLIER = 2;
+const POINTS_DECIMAL_PRECISION = 100;
+const VARIABLE_CHALLENGE_COMPENSATION = 200;
 const START_QUESTION_INDEX = 0;
 const QUIZ_TOTAL = QUESTIONS.length;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
@@ -839,7 +842,7 @@ function evaluateAnswer(q, value) {
     const minValue = Number.isFinite(q.minValue) ? q.minValue : Number.NEGATIVE_INFINITY;
     const maxValue = Number.isFinite(q.maxValue) ? q.maxValue : Number.POSITIVE_INFINITY;
     if (count < minValue || count > maxValue) {
-      const absurdValue = count < 0 || count > maxValue * 2;
+      const absurdValue = count < 0 || count > maxValue * ABSURD_VALUE_MULTIPLIER;
       return {
         correct: false,
         addedPoints: 0,
@@ -847,7 +850,8 @@ function evaluateAnswer(q, value) {
         wrongMessage: absurdValue && q.absurdWrongMessage ? q.absurdWrongMessage : q.outOfRangeMessage,
       };
     }
-    const computedPoints = Math.round(count * (q.unitPoints ?? 0) * 100) / 100;
+    const computedPoints =
+      Math.round(count * (q.unitPoints ?? 0) * POINTS_DECIMAL_PRECISION) / POINTS_DECIMAL_PRECISION;
     return {
       correct: true,
       addedPoints: computedPoints,
@@ -1052,7 +1056,7 @@ function getComputedMaxScore() {
     maxScore += question.points ?? 0;
     if (question.henryFinal) maxScore += HENRY_STARTING_SCORE;
   });
-  return maxScore + 200;
+  return maxScore + VARIABLE_CHALLENGE_COMPENSATION;
 }
 
 elRestartBtn.addEventListener("click", () => {
@@ -1102,7 +1106,7 @@ function looksLikeCoordinates(value) {
 }
 
 function renumberStepMentions(value) {
-  return String(value || "").replace(/Étape\s+(\d+)/giu, (_, stepText) => {
+  return String(value || "").replace(/Étape\s*(\d+)/giu, (_, stepText) => {
     const step = Number.parseInt(stepText, 10);
     if (!Number.isFinite(step) || step <= 0) return `Étape ${stepText}`;
     return `Étape ${Math.max(1, step - 1)}`;
