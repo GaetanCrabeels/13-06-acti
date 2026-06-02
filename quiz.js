@@ -18,22 +18,28 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
-const STEP_TWO_STAGE_PREFIX = "Étape 2";
-const START_QUESTION_INDEX = (() => {
-  const stepTwoIndex = QUESTIONS.findIndex(
-    (question) => typeof question.stage === "string" && question.stage.startsWith(STEP_TWO_STAGE_PREFIX)
-  );
-  return stepTwoIndex >= 0 ? stepTwoIndex : 0;
-})();
-const QUIZ_TOTAL = Math.max(1, QUESTIONS.length - START_QUESTION_INDEX);
+const ABSURD_VALUE_MULTIPLIER = 2;
+const POINTS_DECIMAL_PRECISION = 100;
+const VARIABLE_CHALLENGE_COMPENSATION = 200;
+const START_QUESTION_INDEX = 0;
+const QUIZ_TOTAL = QUESTIONS.length;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
   const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
+  return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
+})();
+const STEP_SEVEN_UNLOCK_INDEX = (() => {
+  const unlockIndex = QUESTIONS.findIndex((question) => typeof question.stage === "string" && question.stage.startsWith("Étape 7"));
+  return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
+})();
+const STEP_EIGHT_UNLOCK_INDEX = (() => {
+  const unlockIndex = QUESTIONS.findIndex((question) => typeof question.stage === "string" && question.stage.startsWith("Étape 8"));
   return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
 })();
 let henryRemaining = HENRY_STARTING_SCORE;
 let henryInterval = null;
 let henryStarted = false;
 let henryAwarded = false;
+const completedMissions = new Set();
 
 const screens = {
   start: document.getElementById("screen-start"),
@@ -80,6 +86,7 @@ const elHintText = document.getElementById("hint-text");
 const elAnswerIcon = document.getElementById("answer-icon");
 const elAnswerTitle = document.getElementById("answer-title");
 const elAnswerExact = document.getElementById("answer-exact");
+const elAnswerEasterEgg = document.getElementById("answer-easter-egg");
 const elAnswerPoints = document.getElementById("answer-points");
 const elCoordinatesBlock = document.getElementById("coordinates-block");
 const elCoordinatesTitle = document.getElementById("coordinates-title");
@@ -96,6 +103,11 @@ const elMissionsTab = document.getElementById("missions-tab");
 const elObjectivesPanel = document.getElementById("objectives-panel");
 const elMissionsPanel = document.getElementById("missions-panel");
 const elObjectivesContent = document.getElementById("objectives-content");
+const elMissionsContent = document.getElementById("missions-content");
+const elObjectivesProgressText = document.getElementById("objectives-progress-text");
+const elObjectivesProgressBar = document.getElementById("objectives-progress-bar");
+const elMissionsProgressText = document.getElementById("missions-progress-text");
+const elMissionsProgressBar = document.getElementById("missions-progress-bar");
 const objectiveCards = [
   {
     title: "Feuilles d’arbres",
@@ -105,12 +117,40 @@ const objectiveCards = [
       "Comptage à l’arrivée : 50 points par feuille différente.",
     ],
   },
+  {
+    title: "Objectif étape 7",
+    unlockIndex: STEP_SEVEN_UNLOCK_INDEX,
+    items: ["Validez l’accès au défi des feuilles avec une estimation cohérente des berges."],
+  },
+  {
+    title: "Objectif étape 8",
+    unlockIndex: STEP_EIGHT_UNLOCK_INDEX,
+    items: ["Terminez la zone finale puis confirmez le dernier choix bonus/malus."],
+  },
+];
+const missionCards = [
+  {
+    id: "photo",
+    title: "Mission photo",
+    description: "Photo avec : un objet spécifique, papa, un petit oiseau et votre reflet à tous dans l’eau du lac.",
+  },
+  {
+    id: "doigts-pieds",
+    title: "Mission collective",
+    description: "Tout le monde participe, avec uniquement le nombre de doigts et de pieds demandé dans votre mission.",
+  },
+  {
+    id: "colour-hunt",
+    title: "Colour hunt",
+    description: "Faites un maximum de photos avec la couleur indiquée.",
+  },
 ];
 
 const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
+renderMissionsPanel();
 updateObjectivesPanel();
 
 function toggleFloatingPanel(panel, button, otherPanel, otherButton) {
@@ -126,7 +166,22 @@ function toggleFloatingPanel(panel, button, otherPanel, otherButton) {
 function updateObjectivesPanel() {
   if (!elObjectivesContent) return;
   const progressIndex = Math.max(0, currentIndex);
+  const totalObjectives = objectiveCards.length;
   const unlockedObjectives = objectiveCards.filter((card) => progressIndex >= card.unlockIndex);
+  const completedObjectives = objectiveCards.filter((card) => progressIndex > card.unlockIndex).length;
+  const objectiveRatio = totalObjectives === 0 ? 0 : completedObjectives / totalObjectives;
+  if (elObjectivesProgressText) {
+    elObjectivesProgressText.textContent = `${completedObjectives} / ${totalObjectives}`;
+  }
+  if (elObjectivesProgressBar) {
+    elObjectivesProgressBar.style.width = `${Math.round(objectiveRatio * 100)}%`;
+  }
+
+  if (!unlockedObjectives.length) {
+    elObjectivesContent.innerHTML = "<p>Aucun objectif supplémentaire débloqué pour l’instant.</p>";
+    return;
+  }
+
   elObjectivesContent.innerHTML = unlockedObjectives
     .map(
       (card) => `
@@ -141,6 +196,46 @@ function updateObjectivesPanel() {
     .join("");
 }
 
+function renderMissionsPanel() {
+  if (!elMissionsContent) return;
+  elMissionsContent.innerHTML = missionCards
+    .map(
+      (mission) => `
+        <label class="floating-mission">
+          <input type="checkbox" data-mission-id="${escapeHtml(mission.id)}" />
+          <span>
+            <strong>${escapeHtml(mission.title)}</strong>
+            <small>${escapeHtml(mission.description)}</small>
+          </span>
+        </label>
+      `
+    )
+    .join("");
+
+  Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const missionId = checkbox.dataset.missionId;
+      if (!missionId) return;
+      if (checkbox.checked) completedMissions.add(missionId);
+      else completedMissions.delete(missionId);
+      updateMissionProgress();
+    });
+  });
+  updateMissionProgress();
+}
+
+function updateMissionProgress() {
+  const total = missionCards.length;
+  const done = completedMissions.size;
+  const ratio = total === 0 ? 0 : done / total;
+  if (elMissionsProgressText) {
+    elMissionsProgressText.textContent = `${done} / ${total}`;
+  }
+  if (elMissionsProgressBar) {
+    elMissionsProgressBar.style.width = `${Math.round(ratio * 100)}%`;
+  }
+}
+
 function startQuiz() {
   currentIndex = START_QUESTION_INDEX;
   score = 0;
@@ -148,6 +243,13 @@ function startQuiz() {
   currentAnswerCorrect = false;
   usedHints.clear();
   pointsByGroup.clear();
+  completedMissions.clear();
+  if (elMissionsContent) {
+    Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+  }
+  updateMissionProgress();
   resetHenryStage();
   showScreen("question");
   loadQuestion(currentIndex);
@@ -190,11 +292,12 @@ function loadQuestion(index) {
   elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
   elQuestionTotal.textContent = QUIZ_TOTAL;
   updateScoreUI();
-  elStageLabel.textContent = q.stage;
+  elStageLabel.textContent = getDisplayStageLabel(q.stage);
   elSection.textContent = q.section;
   const instructionsText = getInstructionsText(q);
   elInstructions.textContent = instructionsText;
   elInstructions.style.display = instructionsText ? "block" : "none";
+  elInstructions.classList.toggle("instructions-highlight", q.section === "Épreuve feuilles");
   elQuestionText.textContent = q.question;
   configureQuestionImage(q);
 
@@ -728,12 +831,30 @@ function evaluateAnswer(q, value) {
   if (q.kind === "numeric-bonus") {
     const regex = getCachedRegex(q.answerPattern);
     if (!regex.test(value.trim())) {
-      return { correct: false, addedPoints: 0, answerDisplay: q.answerDisplay };
+      return {
+        correct: false,
+        addedPoints: 0,
+        answerDisplay: q.answerDisplay,
+        wrongMessage: q.outOfRangeMessage || "Entrez un nombre valide pour continuer.",
+      };
     }
     const count = Number.parseInt(value, 10);
+    const minValue = Number.isFinite(q.minValue) ? q.minValue : Number.NEGATIVE_INFINITY;
+    const maxValue = Number.isFinite(q.maxValue) ? q.maxValue : Number.POSITIVE_INFINITY;
+    if (count < minValue || count > maxValue) {
+      const absurdValue = count < 0 || count > maxValue * ABSURD_VALUE_MULTIPLIER;
+      return {
+        correct: false,
+        addedPoints: 0,
+        answerDisplay: q.answerDisplay,
+        wrongMessage: absurdValue && q.absurdWrongMessage ? q.absurdWrongMessage : q.outOfRangeMessage,
+      };
+    }
+    const computedPoints =
+      Math.round(count * (q.unitPoints ?? 0) * POINTS_DECIMAL_PRECISION) / POINTS_DECIMAL_PRECISION;
     return {
       correct: true,
-      addedPoints: count * (q.unitPoints ?? 0),
+      addedPoints: computedPoints,
       answerDisplay: q.answerDisplay,
       customTitle: "Bonus enregistré",
     };
@@ -800,6 +921,8 @@ function showAnswerScreen(result, q) {
   if (isHenryQuestion(q)) stopHenryTimer();
   showScreen("answer");
   currentAnswerCorrect = result.correct;
+  elAnswerEasterEgg.textContent = "";
+  elAnswerEasterEgg.style.display = "none";
 
   let addedPoints = result.correct ? result.addedPoints ?? 0 : 0;
   if (result.correct && q.henryFinal && !henryAwarded) {
@@ -820,6 +943,10 @@ function showAnswerScreen(result, q) {
     elAnswerPoints.style.display = shouldShowPointsBadge(q, addedPoints) ? "inline-block" : "none";
     const bubbleText = getAnswerBubbleText(q, result);
     setAnswerExactContent(bubbleText, q, Boolean(bubbleText));
+    if (q.easterEgg?.text) {
+      elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.text}`;
+      elAnswerEasterEgg.style.display = "block";
+    }
     renderNextBlock(q.nextBlock);
   } else {
     elAnswerIcon.textContent = result.timeout ? "⏰" : "❌";
@@ -888,20 +1015,48 @@ function showResultScreen() {
   stopHenryTimer();
   showScreen("result");
 
+  const maxScore = getComputedMaxScore();
+  const scoreRatio = maxScore > 0 ? score / maxScore : 0;
   elFinalScore.textContent = score;
-  elFinalDetails.textContent = "Total sur le site, hors vérifications complémentaires à l’arrivée.";
+  elFinalDetails.textContent = `Score maximal de référence : ${maxScore} pts (inclus +200 de compensation pour l’épreuve variable).`;
 
-  let message;
-  if (score >= 5000) {
-    message = "🌟 Parcours maîtrisé : vous avez enchaîné les étapes, bonus et énigmes comme des pros.";
-  } else if (score >= 3000) {
-    message = "👏 Belle balade : les compartiments Vrai/Faux, Henryesque et devinettes ont bien été gérés.";
-  } else if (score >= 1500) {
-    message = "🌿 Parcours validé : encore quelques bonus à grappiller, mais l’essentiel est là.";
+  let medal = "🥉 Médaille de bronze";
+  let message = "Balade terminée : mission accomplie, même si quelques bonus ont filé.";
+  if (scoreRatio >= 0.8) {
+    medal = "🥇 Médaille d’or";
+    message = "Parcours magistral : vous avez percé les mystères et optimisé les points.";
+  } else if (scoreRatio >= 0.65) {
+    medal = "🥈 Médaille d’argent";
+    message = "Très belle progression : encore un petit effort pour viser l’or.";
+  } else if (scoreRatio > 0.5) {
+    medal = "🥉 Médaille de bronze";
+    message = "Parcours solide : vous êtes proche du niveau argent, continuez comme ça.";
   } else {
-    message = "🍃 Balade terminée : vous avez les bases, il ne reste plus qu’à optimiser les bonus.";
+    medal = "🥉 Médaille de bronze";
+    message = "Vous avez tenu jusqu’au bout : prochaine tentative, vous grimperez vite.";
   }
-  elFinalMessage.textContent = message;
+  elFinalMessage.textContent = `${medal} — ${message}`;
+}
+
+function getComputedMaxScore() {
+  let maxScore = 0;
+  QUESTIONS.forEach((question) => {
+    if (question.kind === "numeric-bonus" || question.kind === "range-bonus") return;
+    if (question.kind === "choice-award") {
+      const options = Object.values(question.choicePoints || {});
+      const bestChoice = options.length ? Math.max(...options) : 0;
+      maxScore += bestChoice;
+      return;
+    }
+    if (question.kind === "match-pairs") {
+      const pairCount = Array.isArray(question.pairs) ? question.pairs.length : 0;
+      maxScore += pairCount * (question.pointsPerMatch ?? 0);
+      return;
+    }
+    maxScore += question.points ?? 0;
+    if (question.henryFinal) maxScore += HENRY_STARTING_SCORE;
+  });
+  return maxScore + VARIABLE_CHALLENGE_COMPENSATION;
 }
 
 elRestartBtn.addEventListener("click", () => {
@@ -950,14 +1105,36 @@ function looksLikeCoordinates(value) {
   return /\d+\.\d+\s*,\s*\d+\.\d+/.test(value);
 }
 
+function renumberStepMentions(value) {
+  return String(value || "").replace(/Étape\s*(\d+)/giu, (_, stepText) => {
+    const step = Number.parseInt(stepText, 10);
+    if (!Number.isFinite(step) || step <= 0) return `Étape ${stepText}`;
+    return `Étape ${Math.max(1, step - 1)}`;
+  });
+}
+
+function getDisplayStageLabel(stageText) {
+  const renumbered = renumberStepMentions(stageText);
+  const coordinatesMatch = renumbered.match(/(Étape\s+\d+)\s*[–-]\s*([0-9.,\s]+)/iu);
+  if (!coordinatesMatch) return renumbered;
+  const stepLabel = coordinatesMatch[1];
+  const coordinates = coordinatesMatch[2].trim();
+  return `${stepLabel} — Rendez-vous aux coordonnées ${coordinates}`;
+}
+
 function formatPoints(value) {
-  if (value > 0) return `+${value} points`;
-  if (value < 0) return `${value} points`;
+  const formattedValue =
+    Number.isInteger(value) ? String(value) : String(Number(value).toFixed(2)).replace(/\.?0+$/u, "");
+  if (value > 0) return `+${formattedValue} points`;
+  if (value < 0) return `${formattedValue} points`;
   return "+0 points";
 }
 
 function shouldSkipRetryOnWrong(q) {
-  return q.section !== "Signe distinctif";
+  if (!q) return true;
+  if (q.section === "Signe distinctif" || q.section === "Énigme") return false;
+  if (q.kind === "numeric-bonus") return false;
+  return true;
 }
 
 function getQuestionOptions(q) {
@@ -1078,11 +1255,18 @@ function getAnswerTitle(q, result) {
 }
 
 function getWrongAnswerText(q, result) {
+  if (result?.wrongMessage) return result.wrongMessage;
   if (q.kind === "henry") {
     return `Vous avez cliqué sur une vraie réponse. Le capital Henryesque perd ${HENRY_WRONG_PENALTY} points et continue jusqu’à la question suivante.`;
   }
   if (q.section === "Signe distinctif") {
     return "Ce n’est pas encore ça. Réessayez sur place jusqu’à trouver le bon signe distinctif.";
+  }
+  if (q.section === "Énigme") {
+    return "Ce n’est pas la bonne combinaison. Réessayez : vous devez résoudre l’énigme pour continuer.";
+  }
+  if (q.kind === "numeric-bonus") {
+    return "Valeur non retenue. Réessayez avec une estimation valide.";
   }
   if (result.timeout) {
     return "Pas de point pour cette question. On passe à la suivante.";
@@ -1096,15 +1280,16 @@ function getResolvedNextBlock(block, q) {
     return {
       title: "Rendez-vous aux coordonnées suivantes",
       value: block.value || "",
-      label: `Vous avez récolté ${henryRemaining} points lors des questions Henryesque. ${block.label || ""}`.trim(),
+      label: renumberStepMentions(`Vous avez récolté ${henryRemaining} points lors des questions Henryesque. ${block.label || ""}`.trim()),
     };
   }
 
   const summary = block.summaryTemplate
     ? block.summaryTemplate.replace("{points}", String(getGroupPoints(q)))
     : "";
-  const label = [summary, block.label].filter(Boolean).join(" ");
-  return { ...block, label };
+  const label = renumberStepMentions([summary, block.label].filter(Boolean).join(" "));
+  const title = renumberStepMentions(block.title || "");
+  return { ...block, title, label };
 }
 
 function extractParenthetical(value) {

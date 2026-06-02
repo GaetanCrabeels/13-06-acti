@@ -28,6 +28,7 @@ const QUESTIONS = [
     type: "free",
     question: "E0 . AIB GBF D . CID HEF",
     instructions: "Possibilité d’indice (fait perdre 50 points).",
+    answerPattern: "^\\D*50\\D*192726\\D*4\\D*394856\\D*$",
     answers: [
       "50.192726, 4.394856",
       "50.192726 4.394856",
@@ -423,6 +424,10 @@ const QUESTIONS = [
     answer: "entre 200 et 300 mètres au-dessus du niveau de la mer",
     points: 250,
     timer: 20,
+    easterEgg: {
+      icon: "🔥",
+      text: "ça va ? Votre 4g n'a pas trop chauffé ?",
+    },
   },
   {
     id: 33,
@@ -514,12 +519,7 @@ const QUESTIONS = [
     section: "Devinettes",
     type: "free",
     question: "Quel grand parc naturel couvre une partie de cette région autour des lacs ?",
-    answers: [
-      "le Parc naturel Viroin-Hermeton",
-      "Parc naturel Viroin-Hermeton",
-      "Viroin-Hermeton",
-      "Parc Viroin Hermeton",
-    ],
+    answerPattern: "^(?=.*\\bviroin\\b)(?=.*\\bhermeton\\b).*$",
     answerDisplay: "le Parc naturel Viroin-Hermeton",
     points: 250,
   },
@@ -561,21 +561,46 @@ const QUESTIONS = [
   {
     id: 42,
     stage: "Étape 7 – 50.188382, 4.346416",
+    section: "Accès défi feuilles",
+    kind: "numeric-bonus",
+    type: "free",
+    question: "Combien de mètres de berges voyez-vous ?",
+    instructions:
+      "Entrez une estimation entre 0 et 18500. Bonus caché : votre valeur divisée par 100 sera ajoutée aux points.",
+    answerPattern: "^-?\\d+$",
+    answerDisplay: "Bonus berges enregistré.",
+    points: 0,
+    unitPoints: 0.01,
+    minValue: 0,
+    maxValue: 18500,
+    rejectOutOfRange: true,
+    absurdWrongMessage:
+      "Même avec des yeux bioniques, impossible d’avoir ce nombre de berges 😄 Restez entre 0 et 18500.",
+    outOfRangeMessage: "Valeur invalide : entrez un nombre entre 0 et 18500 pour continuer.",
+    nextBlock: {
+      title: "Défi feuilles débloqué",
+      value: "Épreuve feuilles",
+      label: "Passez maintenant à l’épreuve des feuilles.",
+    },
+  },
+  {
+    id: 43,
+    stage: "Étape 7 – 50.188382, 4.346416",
     section: "Épreuve feuilles",
     kind: "acknowledgement",
     question: "Rapportez un maximum de feuilles d’arbres différentes : elles seront comptées à l’arrivée.",
     instructions:
-      "Chaque feuille différente vaut 50 points. Appuyez simplement sur OK pour afficher la prochaine coordonnée.",
+      "Règles : 1) Toutes les feuilles doivent être différentes. 2) Comptage à l’arrivée. 3) Chaque feuille différente = 50 points. Appuyez sur OK pour afficher la prochaine coordonnée.",
     answerDisplay: "Épreuve feuilles enregistrée.",
     points: 0,
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.186963, 4.374291",
-      label: "Étape 8 – L’objet caché sera vérifié en réel à l’arrivée.",
+      label: "Étape 8 – Dernière zone du parcours.",
     },
   },
   {
-    id: 43,
+    id: 44,
     stage: "Étape 8 – 50.186963, 4.374291",
     section: "Objet caché",
     kind: "acknowledgement",
