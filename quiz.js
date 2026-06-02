@@ -18,6 +18,14 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
+const STEP_TWO_STAGE_PREFIX = "Étape 2";
+const START_QUESTION_INDEX = (() => {
+  const stepTwoIndex = QUESTIONS.findIndex(
+    (question) => typeof question.stage === "string" && question.stage.startsWith(STEP_TWO_STAGE_PREFIX)
+  );
+  return stepTwoIndex >= 0 ? stepTwoIndex : 0;
+})();
+const QUIZ_TOTAL = Math.max(1, QUESTIONS.length - START_QUESTION_INDEX);
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
   const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
   return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
@@ -90,14 +98,6 @@ const elMissionsPanel = document.getElementById("missions-panel");
 const elObjectivesContent = document.getElementById("objectives-content");
 const objectiveCards = [
   {
-    title: "Mölkky coopératif",
-    unlockIndex: 0,
-    items: [
-      "Atteindre exactement 50 points.",
-      "Objectifs annexes : faire tomber exactement 3 quilles, faire 12 points au premier coup, puis 1 / 2 / 3 dans l’ordre.",
-    ],
-  },
-  {
     title: "Feuilles d’arbres",
     unlockIndex: LEAF_OBJECTIVE_UNLOCK_INDEX,
     items: [
@@ -142,7 +142,7 @@ function updateObjectivesPanel() {
 }
 
 function startQuiz() {
-  currentIndex = 0;
+  currentIndex = START_QUESTION_INDEX;
   score = 0;
   answered = false;
   currentAnswerCorrect = false;
@@ -168,6 +168,15 @@ function showScreen(name) {
 }
 
 function loadQuestion(index) {
+  if (index < START_QUESTION_INDEX) {
+    currentIndex = START_QUESTION_INDEX;
+    index = START_QUESTION_INDEX;
+  }
+  if (index >= QUESTIONS.length) {
+    showResultScreen();
+    return;
+  }
+
   clearAutoAdvance();
   answered = false;
   currentAnswerCorrect = false;
@@ -178,8 +187,8 @@ function loadQuestion(index) {
   matchRightChoices = [];
 
   const q = currentQuestion;
-  elQuestionNumber.textContent = index + 1;
-  elQuestionTotal.textContent = QUESTIONS.length;
+  elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
+  elQuestionTotal.textContent = QUIZ_TOTAL;
   updateScoreUI();
   elStageLabel.textContent = q.stage;
   elSection.textContent = q.section;
@@ -495,6 +504,7 @@ function configureHint(q) {
     elHintBtn.disabled = false;
     elHintBtn.setAttribute("aria-expanded", "false");
     elHintBtn.title = "Afficher l’indice";
+    elHintBtn.textContent = "💡 Indice";
     return;
   }
 
@@ -502,7 +512,9 @@ function configureHint(q) {
   const alreadyUsed = usedHints.has(q.id);
   elHintBtn.disabled = alreadyUsed;
   elHintBtn.setAttribute("aria-expanded", alreadyUsed ? "true" : "false");
-  elHintBtn.title = q.hint.label || "Afficher l’indice";
+  const hintLabel = q.hint.label || "Indice";
+  elHintBtn.title = hintLabel;
+  elHintBtn.textContent = `💡 ${hintLabel}`;
   elHintText.textContent = q.hint.text;
   elHintText.classList.toggle("visible", alreadyUsed);
   const hintImage = typeof q.hint.image === "string" ? q.hint.image.trim() : "";
