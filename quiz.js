@@ -847,7 +847,7 @@ function evaluateAnswer(q, value) {
         wrongMessage: absurdValue && q.absurdWrongMessage ? q.absurdWrongMessage : q.outOfRangeMessage,
       };
     }
-    const computedPoints = Number((count * (q.unitPoints ?? 0)).toFixed(2));
+    const computedPoints = Math.round(count * (q.unitPoints ?? 0) * 100) / 100;
     return {
       correct: true,
       addedPoints: computedPoints,
@@ -1014,7 +1014,7 @@ function showResultScreen() {
   const maxScore = getComputedMaxScore();
   const scoreRatio = maxScore > 0 ? score / maxScore : 0;
   elFinalScore.textContent = score;
-  elFinalDetails.textContent = `Score maximal de référence : ${maxScore} pts (inclut +200 de compensation pour l’épreuve variable).`;
+  elFinalDetails.textContent = `Score maximal de référence : ${maxScore} pts (inclus +200 de compensation pour l’épreuve variable).`;
 
   let medal = "🥉 Médaille de bronze";
   let message = "Balade terminée : mission accomplie, même si quelques bonus ont filé.";
@@ -1024,7 +1024,7 @@ function showResultScreen() {
   } else if (scoreRatio >= 0.65) {
     medal = "🥈 Médaille d’argent";
     message = "Très belle progression : encore un petit effort pour viser l’or.";
-  } else if (scoreRatio < 0.65 && scoreRatio > 0.5) {
+  } else if (scoreRatio > 0.5) {
     medal = "🥉 Médaille de bronze";
     message = "Parcours solide : vous êtes proche du niveau argent, continuez comme ça.";
   } else {
