@@ -20,7 +20,7 @@
           <div class="start-rules">
             <h3>📋 Règles du jeu</h3>
             <ul>
-              <li>Plusieurs rôles existent dans votre groupe : gens normaux, émissaire pour répondre aux questions et traîtres.</li>
+              <li>Votre équipe cache plusieurs rôles… mais qui fait vraiment quoi ? Gardez le doute jusqu’au bout.</li>
               <li>Récoltez un maximum de points pour décrocher la médaille d’or.</li>
               <li>Utilisez les onglets permanents pour suivre les objectifs annexes et les missions supplémentaires.</li>
             </ul>
@@ -121,6 +121,7 @@
           <span id="answer-icon" class="answer-icon">✅</span>
           <h2 id="answer-title" class="answer-title">Bonne réponse !</h2>
           <p id="answer-exact" class="answer-exact"></p>
+          <p id="answer-easter-egg" class="answer-easter-egg"></p>
           <span id="answer-points" class="points-badge gain"></span>
         </div>
 
@@ -161,7 +162,9 @@
     <div class="floating-tabs">
       <div class="floating-tab-group objectives">
         <button id="objectives-tab" class="floating-tab-button" type="button" aria-expanded="false" aria-controls="objectives-panel">
-          Objectifs annexes
+          <span class="floating-tab-title">Objectifs annexes</span>
+          <span id="objectives-progress-text" class="floating-tab-progress-text">0 / 0</span>
+          <span class="floating-progress-track"><span id="objectives-progress-bar" class="floating-progress-bar"></span></span>
         </button>
         <aside id="objectives-panel" class="floating-panel" aria-hidden="true">
           <h3>Objectifs annexes</h3>
@@ -171,16 +174,13 @@
 
       <div class="floating-tab-group missions">
         <button id="missions-tab" class="floating-tab-button" type="button" aria-expanded="false" aria-controls="missions-panel">
-          Missions annexes
+          <span class="floating-tab-title">Missions annexes</span>
+          <span id="missions-progress-text" class="floating-tab-progress-text">0 / 0</span>
+          <span class="floating-progress-track"><span id="missions-progress-bar" class="floating-progress-bar"></span></span>
         </button>
         <aside id="missions-panel" class="floating-panel" aria-hidden="true">
           <h3>Missions annexes</h3>
-          <div class="floating-panel-content">
-            <ul class="floating-list">
-              <li>Photo avec : un objet spécifique, papa, un petit oiseau et votre reflet à tous dans l’eau du lac.</li>
-              <li>Tout le monde participe, avec uniquement le nombre de doigts et de pieds demandé dans votre mission.</li>
-              <li>Colour hunt : faites un maximum de photos avec la couleur indiquée.</li>
-            </ul>
+          <div id="missions-content" class="floating-panel-content">
           </div>
         </aside>
       </div>

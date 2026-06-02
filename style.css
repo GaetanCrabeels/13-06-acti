@@ -37,7 +37,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 16px;
+  padding: 98px 16px 16px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='1.5' fill='%232d6a2d' opacity='.06'/%3E%3C/svg%3E");
 }
 
@@ -258,6 +258,17 @@ body {
   font-size: 0.92rem;
   color: var(--clr-text-muted);
   line-height: 1.55;
+}
+
+.question-instructions.instructions-highlight {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--clr-primary-dark);
+  background: #edf5ed;
+  border: 1px solid #c7ddc7;
+  border-left: 4px solid var(--clr-primary);
+  border-radius: 10px;
+  padding: 10px 12px;
 }
 
 .hint-wrap {
@@ -667,6 +678,18 @@ body {
   line-height: 1.5;
 }
 
+.answer-easter-egg {
+  display: none;
+  margin-top: 10px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #9c4f00;
+  background: #fff2df;
+  border: 1px solid #f0c88d;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
 .points-badge {
   display: inline-block;
   margin-top: 10px;
@@ -724,13 +747,17 @@ body {
 .coordinates-value.textual {
   font-family: var(--font-base);
   letter-spacing: normal;
-  font-size: 1.05rem;
+  font-size: 1.26rem;
+  font-weight: 900;
+  color: var(--clr-primary-dark);
 }
 
 .coordinates-label {
-  font-size: 0.9rem;
-  color: var(--clr-text-muted);
-  line-height: 1.5;
+  font-size: 1rem;
+  color: #2b4f2b;
+  line-height: 1.55;
+  font-weight: 700;
+  margin-top: 8px;
 }
 
 .result-hero {
@@ -841,39 +868,34 @@ body {
 
 .floating-tabs {
   position: fixed;
-  right: 0;
-  top: 120px;
+  top: 10px;
+  left: 10px;
+  right: 10px;
   z-index: 30;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: none;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: auto;
 }
 
 .floating-tab-group {
   position: relative;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none;
-}
-
-.floating-tab-button,
-.floating-panel {
-  pointer-events: auto;
+  width: min(46vw, 280px);
 }
 
 .floating-tab-button {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  border: none;
-  border-radius: 12px 0 0 12px;
-  padding: 14px 10px;
-  min-height: 124px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
   font: inherit;
   font-weight: 800;
   color: #fff;
   cursor: pointer;
   box-shadow: var(--shadow);
+  display: grid;
+  gap: 6px;
+  text-align: left;
 }
 
 .floating-tab-group.objectives .floating-tab-button {
@@ -884,16 +906,51 @@ body {
   background: var(--clr-accent);
 }
 
+.floating-tab-title {
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.floating-tab-progress-text {
+  font-size: 0.84rem;
+  opacity: 0.95;
+}
+
+.floating-progress-track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  overflow: hidden;
+}
+
+.floating-progress-bar {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  transition: width 0.25s ease;
+}
+
 .floating-panel {
   position: absolute;
-  right: 56px;
-  top: 0;
-  width: min(320px, calc(100vw - 88px));
+  top: calc(100% + 8px);
+  width: min(360px, calc(100vw - 24px));
   background: var(--clr-surface);
-  border-radius: 16px 0 0 16px;
+  border-radius: 14px;
   box-shadow: var(--shadow);
   padding: 18px;
   display: none;
+}
+
+.floating-tab-group.objectives .floating-panel {
+  left: 0;
+}
+
+.floating-tab-group.missions .floating-panel {
+  right: 0;
 }
 
 .floating-panel.open {
@@ -941,6 +998,30 @@ body {
   gap: 6px;
 }
 
+.floating-mission {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  padding: 10px;
+  background: #f9f7f2;
+}
+
+.floating-mission strong {
+  display: block;
+  color: var(--clr-primary-dark);
+  font-size: 0.92rem;
+}
+
+.floating-mission small {
+  display: block;
+  margin-top: 2px;
+  color: var(--clr-text-muted);
+  line-height: 1.45;
+}
+
 @media (max-width: 640px) {
   .quiz-header {
     flex-direction: column;
@@ -964,16 +1045,20 @@ body {
   }
 
   .floating-tabs {
-    top: auto;
-    bottom: 16px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    gap: 10px;
   }
 
   .floating-panel {
-    right: 52px;
-    top: auto;
-    bottom: 0;
+    top: calc(100% + 6px);
     max-height: 70vh;
     overflow: auto;
+  }
+
+  .floating-tab-group {
+    width: calc(50% - 5px);
   }
 }
 
