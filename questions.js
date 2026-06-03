@@ -18,7 +18,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Signe distinctif trouvé",
-      label: "Vous pouvez maintenant répondre à l’énigme de l’étape 2.",
+      label: "Vous pouvez maintenant répondre à l’énigme de l’étape.",
     },
   },
   {
@@ -27,7 +27,7 @@ const QUESTIONS = [
     section: "Énigme",
     type: "free",
     question: "E0 . AIB GBF D . CID HEF",
-    instructions: "Possibilité d’indice (fait perdre 50 points).",
+    timer: 10,
     answerPattern: "^\\D*50\\D*192726\\D*4\\D*394856\\D*$",
     answers: [
       "50.192726, 4.394856",
@@ -45,7 +45,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.192726, 4.394856",
-      label: "Étape 3 – Validez le lieu avant d’attaquer le Vrai/Faux.",
+      label: "Étape suivante (chronométrée).",
     },
   },
   {
@@ -57,10 +57,11 @@ const QUESTIONS = [
       "Dans le silence paisible des sentiers apprivoisés, là où ni moteurs pressés ni tumulte ne viennent troubler la lente respiration du paysage, vous avancez sur un ruban discret qui enlace la nature et guide les voyageurs patients. Dites-moi, sous vos pas et au fil de cette voie dédiée aux marcheurs et aux cyclistes rêveurs, quel est le nombre secret qui baptise ce chemin où le temps semble suspendu ?",
     answerPattern: "^.*109.*$",
     points: 0,
+    timer: 15,
     nextBlock: {
       title: "Lieu validé",
-      value: "Vrai/Faux débloqué",
-      label: "Restez sur place : place au Vrai/Faux chronométré.",
+      value: "Coordonnée validée",
+      label: "Étape suivante (chronométrée).",
     },
   },
   {
@@ -74,7 +75,7 @@ const QUESTIONS = [
     answerBubble:
       "En réalité, même si la pluie contribue au niveau de l’eau, ce n’est qu’une petite partie.\nLe lac est principalement alimenté par :\n• la rivière de l’Eau d’Heure\n• d’autres apports hydrauliques contrôlés.",
     points: 150,
-    timer: 20,
+    timer: 7,
   },
   {
     id: 7,
@@ -87,7 +88,7 @@ const QUESTIONS = [
     answerBubble:
       "C’est une idée qui revient souvent, mais ici :\n• aucun village complet n’a été englouti\n• il y avait surtout des terres agricoles, des bois et quelques bâtiments isolés.\n\nContrairement à d’autres barrages en Europe, il n’y a pas de « ville fantôme » sous l’eau ici, même si le mythe est tentant.\n\nExemples célèbres ailleurs en Europe :\n• Lac de Resia : un village submergé dans les années 1950, seul le clocher de l’église dépasse encore.\n• Embalse de Sau : un ancien village repose sous le lac, et quand le niveau baisse, les ruines réapparaissent.\n• Lac de Serre-Ponçon : plusieurs villages déplacés ou détruits, avec la chapelle Saint-Michel conservée au milieu des eaux.\n• Ladybower Reservoir : le village de Derwent a été englouti, et lors des sécheresses, des vestiges réapparaissent.",
     points: 150,
-    timer: 20,
+    timer: 10,
   },
   {
     id: 8,
@@ -100,7 +101,7 @@ const QUESTIONS = [
     answerBubble:
       "Plusieurs lacs sont interconnectés : l’eau peut circuler entre eux selon les besoins grâce à des installations techniques.\nLe barrage de la Plate Taille joue un rôle central dans ce système.\n\nCela permet de gérer :\n• les niveaux d’eau\n• la production d’énergie\n• la sécurité hydraulique.",
     points: 150,
-    timer: 20,
+    timer: 15,
   },
   {
     id: 9,
@@ -129,8 +130,8 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.201160, 4.387284",
-      summaryTemplate: "Avec cette épreuve, vous avez remporté {points} points !",
-      label: "Étape 4 – Commencez par le signe distinctif, puis les questions Henryesque.",
+      summaryTemplate: "Avec cette épreuve vous avez remporté {points} points",
+      label: "Étape suivante (non chronométrée).",
     },
   },
   {
@@ -145,9 +146,8 @@ const QUESTIONS = [
     points: 0,
     nextBlock: {
       title: "Lieu validé",
-      value: "Questions Henryesque débloquées",
-      label:
-        "Commencez le QCM chronométré : pour marquer, choisissez une mauvaise réponse. Départ à 500 points, -1 point par seconde et -15 points par “mauvaise” réponse.",
+      value: "Coordonnée validée",
+      label: "Étape suivante (chronométrée).",
     },
   },
   {
@@ -156,9 +156,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quelle guerre a-t-il vécue ?",
-    instructions:
-      "Règle Henryesque : pour marquer, choisissez une mauvaise réponse. Capital initial : 500 points, -1 point par seconde et -15 points chaque fois que vous cliquez sur une vraie réponse.",
-    options: ["La guerre de Chypre", "La guerre de Corée", "La guerre d’Algérie"],
+    options: ["La guerre de Chypre", "La guerre de Chyp’Rire", "La guerre de Chy-près"],
     answer: "La guerre de Chypre",
     points: 0,
   },
@@ -184,7 +182,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Dans quelle rue a-t-il grandi ?",
-    options: ["Rue planche au pêcheur", "Rue des Tanneurs", "Rue Haute"],
+    options: ["Rue planche au pêcheur", "Rue planche au pécheur", "Rue planche aux pêcheurs"],
     answer: "Rue planche au pêcheur",
     points: 0,
   },
@@ -204,7 +202,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Où a t il passé ses dernières vacances ?",
-    options: ["Albanie", "Portugal", "Croatie"],
+    options: ["Albanie", "Alba-nid", "Alba-nuit"],
     answer: "Albanie",
     points: 0,
   },
@@ -214,8 +212,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel sport pratique-t-il en salle ?",
-    options: ["Badminton", "Padel", "Squash"],
-    answers: ["Badminton", "Padel"],
+    options: ["Badminton", "Paddle", "Squash"],
+    answers: ["Badminton", "Paddle"],
     points: 0,
   },
   {
@@ -237,9 +235,9 @@ const QUESTIONS = [
     kind: "henry",
     type: "mcq",
     question: "Quelle était sa première voiture ?",
-    options: ["Golf", "Golfe", "Gulf"],
-    answer: "Golf",
-    answerDisplay: "Golf",
+    options: ["Golf", "Volkswagen", "Volksvagen"],
+    answers: ["Golf", "Volkswagen"],
+    answerDisplay: "Golf / Volkswagen",
     points: 0,
   },
   {
@@ -248,8 +246,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quelles langues parle t il ?",
-    options: ["Français, anglais, espagnol", "Français, néerlandais, allemand", "Français, anglais, portugais"],
-    answer: "Français, anglais, espagnol",
+    options: ["Français", "Anglais", "Espagnol", "Wallon"],
+    answers: ["Français", "Anglais", "Espagnol"],
     points: 0,
   },
   {
@@ -258,8 +256,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est le pays le plus lointain où il s’est rendu en voiture ?",
-    options: ["Iran", "Turquie", "Grèce"],
-    answer: "Iran",
+    options: ["Malte", "Turquie", "Grèce"],
+    answer: "Malte",
     points: 0,
   },
   {
@@ -280,9 +278,9 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est l'endroit le plus lointain où il ait voyagé ?",
-    options: ["La Réunion", "Tokyo", "Le Caire"],
-    answers: ["La Réunion", "La Reunion"],
-    answerDisplay: "La Réunion",
+    options: ["Saint-Louis USA", "Tokyo", "Le Caire"],
+    answers: ["Saint-Louis USA", "Saint Louis USA"],
+    answerDisplay: "Saint-Louis USA",
     points: 0,
   },
   {
@@ -332,7 +330,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.202982, 4.376316",
-      label: "Étape 5 – Validez le lieu, puis décodez l’énigme.",
+      label: "Étape suivante (non chronométrée).",
     },
   },
   {
@@ -347,7 +345,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Signe distinctif trouvé",
-      label: "Vous pouvez maintenant répondre à l’énigme de l’étape 5.",
+      label: "Vous pouvez maintenant répondre à l’énigme de l’étape.",
     },
   },
   {
@@ -355,14 +353,9 @@ const QUESTIONS = [
     stage: "Étape 5 – 50.202982, 4.376316",
     section: "Énigme",
     type: "free",
-    question: "Décodez : JA JPJ / GDMDWWP",
-    instructions: "Attention, les espaces comptent. Possibilité d’indice (fait perdre 50 points).",
-    answers: [
-      "50.205750, 4.363997",
-      "50.205750 4.363997",
-      "502057504363997",
-      "50 205750 4 363997",
-    ],
+    question: "Décodez : JAJPJ/GDMDWWP",
+    instructions: "Décodage 3310 : validez avec les coordonnées, avec ou sans séparateurs.",
+    answerPattern: "^\\D*50\\D*205750\\D*4\\D*363997\\D*$",
     points: 250,
     hint: {
       text: "Un 3310 vous aurait été bien utile.",
@@ -373,7 +366,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.205750, 4.363997",
-      label: "Étape 6 – Validez le lieu avant les devinettes.",
+      label: "Étape suivante (non chronométrée).",
     },
   },
   {
@@ -388,8 +381,8 @@ const QUESTIONS = [
     points: 0,
     nextBlock: {
       title: "Lieu validé",
-      value: "Devinettes débloquées",
-      label: "Restez sur place pour la série de devinettes (20 secondes de chrono, +250 points par bonne réponse et 30 points par bonne liaison).",
+      value: "Coordonnée validée",
+      label: "Étape suivante (chronométrée).",
     },
   },
   {
@@ -424,10 +417,6 @@ const QUESTIONS = [
     answer: "entre 200 et 300 mètres au-dessus du niveau de la mer",
     points: 250,
     timer: 20,
-    easterEgg: {
-      icon: "🔥",
-      text: "ça va ? Votre 4g n'a pas trop chauffé ?",
-    },
   },
   {
     id: 33,
@@ -457,6 +446,12 @@ const QUESTIONS = [
       { left: "Sivry-Rance", right: "~4 800" },
     ],
     pointsPerMatch: 30,
+    easterEgg: {
+      icon: "🕵️",
+      teaseText: "Mmmh… ces données sont tombées du ciel ?",
+      finalText: "On dit merci quiii? merci google!",
+      delayMs: 1300,
+    },
   },
   {
     id: 35,
@@ -491,7 +486,7 @@ const QUESTIONS = [
     type: "mcq",
     question:
       "Quelle espèce dont on en fait l’élevage, dépasse la population de la ville de Cerfontaine sur le même territoire ?",
-    options: ["Les poissons", "Les moutons", "Les chèvres", "Les chevaux"],
+    options: ["Les poissons", "Les moutons", "Les chèvres", "Les fourmis"],
     answer: "Les poissons",
     points: 250,
     timer: 20,
@@ -535,7 +530,13 @@ const QUESTIONS = [
     target: 600,
     tolerance: 60,
     points: 250,
+    bonusPoints: 50,
     answerDisplay: "environ 600 hectares (soit 6 km²)",
+    bonusReveal: {
+      first: "J’espère que vous avez pris votre temps pour choisir la réponse car…",
+      second: "elle vous donne des points bonus !",
+      delayMs: 1300,
+    },
   },
   {
     id: 41,
@@ -554,8 +555,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.188382, 4.346416",
-      label:
-        "Étape 7 – Vous devrez aussi passer par le point 50.203559, 4.361448 avant la suite.",
+      label: "Étape suivante (non chronométrée).",
     },
   },
   {
@@ -565,8 +565,7 @@ const QUESTIONS = [
     kind: "numeric-bonus",
     type: "free",
     question: "Combien de mètres de berges voyez-vous ?",
-    instructions:
-      "Entrez une estimation entre 0 et 18500. Bonus caché : votre valeur divisée par 100 sera ajoutée aux points.",
+    instructions: "Entrez une estimation entre 0 et 18500.",
     answerPattern: "^-?\\d+$",
     answerDisplay: "Bonus berges enregistré.",
     points: 0,
@@ -579,8 +578,8 @@ const QUESTIONS = [
     outOfRangeMessage: "Valeur invalide : entrez un nombre entre 0 et 18500 pour continuer.",
     nextBlock: {
       title: "Défi feuilles débloqué",
-      value: "Épreuve feuilles",
-      label: "Passez maintenant à l’épreuve des feuilles.",
+      value: "Coordonnée validée",
+      label: "Étape suivante (non chronométrée).",
     },
   },
   {
@@ -590,13 +589,13 @@ const QUESTIONS = [
     kind: "acknowledgement",
     question: "Rapportez un maximum de feuilles d’arbres différentes : elles seront comptées à l’arrivée.",
     instructions:
-      "Règles : 1) Toutes les feuilles doivent être différentes. 2) Comptage à l’arrivée. 3) Chaque feuille différente = 50 points. Appuyez sur OK pour afficher la prochaine coordonnée.",
+      "Règles : 1) Toutes les feuilles doivent être différentes. 2) Comptage à l’arrivée. 3) Chaque espèce de feuille différente vaut 50 points. Appuyez sur OK pour afficher la prochaine coordonnée.",
     answerDisplay: "Épreuve feuilles enregistrée.",
     points: 0,
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.186963, 4.374291",
-      label: "Étape 8 – Dernière zone du parcours.",
+      label: "Étape suivante (non chronométrée).",
     },
   },
   {
@@ -604,28 +603,8 @@ const QUESTIONS = [
     stage: "Étape 8 – 50.186963, 4.374291",
     section: "Objet caché",
     kind: "acknowledgement",
-    question: "Retrouvez l’objet caché dans les environs : sa présence sera vérifiée en réel à l’arrivée.",
-    instructions: "Appuyez sur OK pour passer au dernier choix.",
+    question: "Retrouvez la carte de visite du créateur de ce quizz, elle est cachée quelque part autour de vous",
+    instructions: "Appuyez sur OK pour afficher directement votre résultat final.",
     answerDisplay: "Objet caché à vérifier à l’arrivée.",
-    nextBlock: {
-      title: "Dernier choix",
-      value: "Valeur des points",
-      label: "Si l’objet a été retrouvé, choisissez si la valeur finale des points sera positive ou négative (500 points).",
-    },
-  },
-  {
-    id: 45,
-    stage: "Étape 8 – 50.186963, 4.374291",
-    section: "Bonus / malus final",
-    type: "mcq",
-    kind: "choice-award",
-    question: "Celui qui l’a retrouvé choisit : la valeur des points sera…",
-    options: ["Positive (+500)", "Négative (-500)"],
-    choicePoints: {
-      "Positive (+500)": 500,
-      "Négative (-500)": -500,
-    },
-    answerDisplay: "Choix final enregistré.",
-    points: 0,
   },
 ];

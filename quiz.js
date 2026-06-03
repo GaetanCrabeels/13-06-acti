@@ -17,10 +17,10 @@ const pointsByGroup = new Map();
 const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_WRONG_PENALTY = 15;
+const ANSWER_AUTO_SKIP_DELAY = 1000;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
 const ABSURD_VALUE_MULTIPLIER = 2;
 const POINTS_DECIMAL_PRECISION = 100;
-const VARIABLE_CHALLENGE_COMPENSATION = 200;
 const START_QUESTION_INDEX = 0;
 const QUIZ_TOTAL = QUESTIONS.length;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
@@ -132,17 +132,18 @@ const missionCards = [
   {
     id: "photo",
     title: "Mission photo",
-    description: "Photo avec : un objet spécifique, papa, un petit oiseau et votre reflet à tous dans l’eau du lac.",
+    description:
+      "Photo de groupe avec papa qui fait un signe de victoire, un petit oiseau visible, votre reflet dans l’eau et une pierre en forme de cœur.",
   },
   {
     id: "doigts-pieds",
     title: "Mission collective",
-    description: "Tout le monde participe, avec uniquement le nombre de doigts et de pieds demandé dans votre mission.",
+    description: "Photo avec exactement 18 doigts visibles et 7 pieds visibles, ni plus ni moins.",
   },
   {
     id: "colour-hunt",
-    title: "Colour hunt",
-    description: "Faites un maximum de photos avec la couleur indiquée.",
+    title: "Mission lac",
+    description: "Retrouvez dans le lac un bouchon rouge usé (ou un objet rouge similaire difficile à repérer) et prenez-le en photo.",
   },
 ];
 
@@ -292,7 +293,7 @@ function loadQuestion(index) {
   elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
   elQuestionTotal.textContent = QUIZ_TOTAL;
   updateScoreUI();
-  elStageLabel.textContent = getDisplayStageLabel(q.stage);
+  elStageLabel.textContent = getDisplayStageLabel(q);
   elSection.textContent = q.section;
   const instructionsText = getInstructionsText(q);
   elInstructions.textContent = instructionsText;
@@ -814,6 +815,18 @@ function handleHenryAnswer(result, q) {
   }
 
   autoAdvanceTimeout = window.setTimeout(() => {
+    if (q.henryFinal) {
+      showAnswerScreen(
+        {
+          ...result,
+          correct: true,
+          customTitle: "Quiz Henryesque terminé !",
+          answerDisplay: `Bien joué, vous avez fini le quizz Henryesque et accumulé ${henryRemaining} points.`,
+        },
+        q
+      );
+      return;
+    }
     advanceToNextQuestion();
   }, HENRY_REVEAL_DELAY);
 }
@@ -885,7 +898,7 @@ function evaluateAnswer(q, value) {
     const withinRange = Math.abs(numericValue - target) <= tolerance;
     return {
       correct: withinRange,
-      addedPoints: withinRange ? q.points ?? 0 : 0,
+      addedPoints: withinRange ? (q.points ?? 0) + (q.bonusPoints ?? 0) : 0,
       answerDisplay: q.answerDisplay,
     };
   }
@@ -947,6 +960,28 @@ function showAnswerScreen(result, q) {
       elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.text}`;
       elAnswerEasterEgg.style.display = "block";
     }
+    if (q.easterEgg?.teaseText) {
+      elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.teaseText}`;
+      elAnswerEasterEgg.style.display = "block";
+      const delayedText = q.easterEgg.finalText || "";
+      if (delayedText) {
+        const delay = Number(q.easterEgg.delayMs) || 1000;
+        window.setTimeout(() => {
+          elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.teaseText} ${delayedText}`.trim();
+        }, delay);
+      }
+    }
+    if (q.bonusReveal?.first) {
+      elAnswerEasterEgg.textContent = q.bonusReveal.first;
+      elAnswerEasterEgg.style.display = "block";
+      const secondPart = q.bonusReveal.second || "";
+      if (secondPart) {
+        const delay = Number(q.bonusReveal.delayMs) || 1000;
+        window.setTimeout(() => {
+          elAnswerEasterEgg.textContent = `${q.bonusReveal.first} ${secondPart}`.trim();
+        }, delay);
+      }
+    }
     renderNextBlock(q.nextBlock);
   } else {
     elAnswerIcon.textContent = result.timeout ? "⏰" : "❌";
@@ -965,17 +1000,21 @@ function showAnswerScreen(result, q) {
   }
 
   const isLast = currentIndex >= QUESTIONS.length - 1;
+  const isStageTransition = result.correct && Boolean(q.nextBlock) && !isLast;
   elNextBtn.textContent =
     !result.correct && q.section === "Signe distinctif"
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
-        : "Question suivante →";
+        : isStageTransition
+          ? "Étape suivante →"
+          : "Question suivante →";
+  elNextBtn.classList.toggle("btn-stage-next", isStageTransition);
 
   if (shouldAutoAdvance(q, result)) {
     autoAdvanceTimeout = window.setTimeout(() => {
       elNextBtn.click();
-    }, 900);
+    }, ANSWER_AUTO_SKIP_DELAY);
   }
 }
 
@@ -1018,22 +1057,22 @@ function showResultScreen() {
   const maxScore = getComputedMaxScore();
   const scoreRatio = maxScore > 0 ? score / maxScore : 0;
   elFinalScore.textContent = score;
-  elFinalDetails.textContent = `Score maximal de référence : ${maxScore} pts (inclus +200 de compensation pour l’épreuve variable).`;
+  elFinalDetails.textContent = "Score obtenu pendant le quiz.";
 
   let medal = "🥉 Médaille de bronze";
   let message = "Balade terminée : mission accomplie, même si quelques bonus ont filé.";
   if (scoreRatio >= 0.8) {
     medal = "🥇 Médaille d’or";
-    message = "Parcours magistral : vous avez percé les mystères et optimisé les points.";
+    message = "Vous êtes des cracks… mais pourquoi s’arrêter là ?";
   } else if (scoreRatio >= 0.65) {
     medal = "🥈 Médaille d’argent";
-    message = "Très belle progression : encore un petit effort pour viser l’or.";
+    message = "Très belle médaille obtenue sur le quiz. Les missions supplémentaires et points bonus peuvent encore vous emmener vers l’or.";
   } else if (scoreRatio > 0.5) {
     medal = "🥉 Médaille de bronze";
-    message = "Parcours solide : vous êtes proche du niveau argent, continuez comme ça.";
+    message = "Médaille du quiz validée. Les missions supplémentaires et les bonus peuvent encore faire grimper votre médaille.";
   } else {
     medal = "🥉 Médaille de bronze";
-    message = "Vous avez tenu jusqu’au bout : prochaine tentative, vous grimperez vite.";
+    message = "Bravo d’avoir terminé le quiz. Avec les missions supplémentaires et les bonus, la médaille d’or reste atteignable.";
   }
   elFinalMessage.textContent = `${medal} — ${message}`;
 }
@@ -1056,7 +1095,7 @@ function getComputedMaxScore() {
     maxScore += question.points ?? 0;
     if (question.henryFinal) maxScore += HENRY_STARTING_SCORE;
   });
-  return maxScore + VARIABLE_CHALLENGE_COMPENSATION;
+  return maxScore;
 }
 
 elRestartBtn.addEventListener("click", () => {
@@ -1076,12 +1115,8 @@ function isHenryCorrectAnswer(q, value) {
 }
 
 function shouldAutoAdvance(q, result) {
-  const isCorrect = Boolean(result.correct);
-  const isTimed = Boolean(q.timer);
-  const isHenry = isHenryQuestion(q);
-  const hasTransitionBlock = Boolean(q.nextBlock);
-  const hasFollowingQuestion = currentIndex < QUESTIONS.length - 1;
-  return isCorrect && !isTimed && !isHenry && !hasTransitionBlock && hasFollowingQuestion;
+  const isLastAndCorrect = currentIndex >= QUESTIONS.length - 1 && Boolean(result.correct);
+  return !isLastAndCorrect;
 }
 
 function clearAutoAdvance() {
@@ -1105,21 +1140,12 @@ function looksLikeCoordinates(value) {
   return /\d+\.\d+\s*,\s*\d+\.\d+/.test(value);
 }
 
-function renumberStepMentions(value) {
-  return String(value || "").replace(/Étape\s*(\d+)/giu, (_, stepText) => {
-    const step = Number.parseInt(stepText, 10);
-    if (!Number.isFinite(step) || step <= 0) return `Étape ${stepText}`;
-    return `Étape ${Math.max(1, step - 1)}`;
-  });
-}
-
-function getDisplayStageLabel(stageText) {
-  const renumbered = renumberStepMentions(stageText);
-  const coordinatesMatch = renumbered.match(/(Étape\s+\d+)\s*[–-]\s*([0-9.,\s]+)/iu);
-  if (!coordinatesMatch) return renumbered;
-  const stepLabel = coordinatesMatch[1];
-  const coordinates = coordinatesMatch[2].trim();
-  return `${stepLabel} — Rendez-vous aux coordonnées ${coordinates}`;
+function getDisplayStageLabel(question) {
+  const stageText = String(question?.stage || "");
+  const stageMatch = stageText.match(/(Étape\s+\d+)/iu);
+  const stageLabel = stageMatch ? stageMatch[1] : stageText;
+  const sectionLabel = question?.section ? ` — ${question.section}` : "";
+  return `${stageLabel}${sectionLabel}`.trim();
 }
 
 function formatPoints(value) {
@@ -1280,15 +1306,15 @@ function getResolvedNextBlock(block, q) {
     return {
       title: "Rendez-vous aux coordonnées suivantes",
       value: block.value || "",
-      label: renumberStepMentions(`Vous avez récolté ${henryRemaining} points lors des questions Henryesque. ${block.label || ""}`.trim()),
+      label: `Vous avez récolté ${henryRemaining} points lors des questions Henryesque. ${block.label || ""}`.trim(),
     };
   }
 
   const summary = block.summaryTemplate
     ? block.summaryTemplate.replace("{points}", String(getGroupPoints(q)))
     : "";
-  const label = renumberStepMentions([summary, block.label].filter(Boolean).join(" "));
-  const title = renumberStepMentions(block.title || "");
+  const label = [summary, block.label].filter(Boolean).join(" ");
+  const title = block.title || "";
   return { ...block, title, label };
 }
 

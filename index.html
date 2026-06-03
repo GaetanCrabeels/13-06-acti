@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HB Rithon</title>
+    <title>Quiz Totemolle</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
   </head>
@@ -12,10 +12,7 @@
       <section id="screen-start" class="screen active">
         <div class="card start-hero">
           <span class="start-emoji">🌿</span>
-          <h1 class="start-title">HB Rithon</h1>
-          <p class="start-subtitle">
-            Parcourez les Lacs de l’Eau d’Heure en équipe en validant chaque étape dans l’ordre : signe distinctif d’abord, défi ou énigme ensuite.
-          </p>
+          <h1 class="start-title">Quiz Totemolle</h1>
 
           <div class="start-rules">
             <h3>📋 Règles du jeu</h3>
@@ -41,7 +38,6 @@
             <p id="stage-label" class="stage-label"></p>
           </div>
           <div class="quiz-header-side">
-            <div class="score-badge">🏆 <span id="score">0</span> pts</div>
             <div id="mode-badge" class="mode-badge"></div>
           </div>
         </div>
@@ -56,7 +52,6 @@
 
         <div class="card question-card">
           <span id="question-section" class="section-badge"></span>
-          <p id="question-instructions" class="question-instructions"></p>
           <div id="hint-wrap" class="hint-wrap">
             <button id="hint-btn" type="button" class="btn btn-secondary"></button>
             <p id="hint-text" class="hint-text"></p>
@@ -66,6 +61,7 @@
           </div>
           <img id="question-image" class="question-image" src="" alt="" />
           <p id="question-text" class="question-text"></p>
+          <p id="question-instructions" class="question-instructions"></p>
 
           <div id="mcq-options"></div>
 
@@ -172,14 +168,18 @@
         </aside>
       </div>
 
+      <div class="floating-score">
+        <div class="score-badge">🏆 <span id="score">0</span> pts</div>
+      </div>
+
       <div class="floating-tab-group missions">
         <button id="missions-tab" class="floating-tab-button" type="button" aria-expanded="false" aria-controls="missions-panel">
-          <span class="floating-tab-title">Missions annexes</span>
+          <span class="floating-tab-title">Missions supplémentaires</span>
           <span id="missions-progress-text" class="floating-tab-progress-text">0 / 0</span>
           <span class="floating-progress-track"><span id="missions-progress-bar" class="floating-progress-bar"></span></span>
         </button>
         <aside id="missions-panel" class="floating-panel" aria-hidden="true">
-          <h3>Missions annexes</h3>
+          <h3>Missions supplémentaires</h3>
           <div id="missions-content" class="floating-panel-content">
           </div>
         </aside>

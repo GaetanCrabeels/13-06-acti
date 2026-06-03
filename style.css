@@ -842,6 +842,16 @@ body {
   box-shadow: 0 6px 18px rgba(45, 106, 45, 0.4);
 }
 
+.btn-stage-next {
+  background: var(--clr-accent);
+  box-shadow: 0 4px 14px rgba(200, 132, 26, 0.3);
+}
+
+.btn-stage-next:hover {
+  background: var(--clr-accent-light);
+  box-shadow: 0 6px 18px rgba(200, 132, 26, 0.35);
+}
+
 .btn-accent {
   background: var(--clr-accent);
   color: #fff;
@@ -875,13 +885,28 @@ body {
   z-index: 30;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 16px;
   pointer-events: auto;
 }
 
 .floating-tab-group {
   position: relative;
-  width: min(46vw, 280px);
+  width: min(40vw, 260px);
+}
+
+.floating-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  pointer-events: none;
+}
+
+.floating-score .score-badge {
+  background: var(--clr-primary-dark);
+  color: #fff;
+  box-shadow: var(--shadow);
 }
 
 .floating-tab-button {
@@ -1059,7 +1084,16 @@ body {
   }
 
   .floating-tab-group {
-    width: calc(50% - 5px);
+    width: calc(41% - 5px);
+  }
+
+  .floating-score {
+    flex: 0 0 18%;
+  }
+
+  .floating-score .score-badge {
+    font-size: 0.8rem;
+    padding: 6px 10px;
   }
 }
 
