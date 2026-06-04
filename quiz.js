@@ -18,6 +18,7 @@ let signBriefingQuestionId = null;
 
 const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
+const HENRY_TIME_PENALTY = 1;
 const HENRY_WRONG_PENALTY = 15;
 const ANSWER_AUTO_SKIP_DELAY = 1000;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
@@ -690,7 +691,7 @@ function startHenryTimer() {
   henryStarted = true;
   clearInterval(henryInterval);
   henryInterval = setInterval(() => {
-    henryRemaining = Math.max(0, henryRemaining - 1);
+    henryRemaining = Math.max(0, henryRemaining - HENRY_TIME_PENALTY);
     updateModeBadgeText();
   }, 1000);
 }
@@ -1300,7 +1301,7 @@ function shouldShowAnswerBubbleOnWrong(q) {
 
 function getInstructionsText(q) {
   if (q.kind === "henry") {
-    return "Cette série est chronométrée : -1 point par seconde et -15 points par mauvaise réponse.";
+    return `Cette série est chronométrée : -${HENRY_TIME_PENALTY} point par seconde et -${HENRY_WRONG_PENALTY} points par mauvaise réponse.`;
   }
   if (q.instructions) return q.instructions;
   return "";
@@ -1351,7 +1352,7 @@ function getStageCoordinatesFromText(stageText) {
 
 function renderSignBriefing(q) {
   signBriefingQuestionId = q.id;
-  elSection.textContent = "Accès lieu";
+  elSection.textContent = "Accès à l’étape";
   elQuestionText.textContent = "Avant le signe distinctif, rendez-vous d’abord aux coordonnées de cette étape.";
   const stageCoordinates = getStageCoordinatesFromText(q.stage);
   const details = stageCoordinates
