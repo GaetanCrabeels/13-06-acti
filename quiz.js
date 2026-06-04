@@ -682,7 +682,7 @@ function configureModeBadge(q) {
 
 function updateModeBadgeText() {
   if (!henryAwarded) {
-    elModeBadge.textContent = `Capital restant : ${henryRemaining} pts`;
+    elModeBadge.textContent = `Capital restant : ${henryRemaining} points`;
   }
 }
 
@@ -1322,6 +1322,15 @@ function getWrongAnswerText(q, result) {
   if (q.section === "Signe distinctif") {
     return "Ce n’est pas encore ça. Réessayez sur place jusqu’à trouver le bon signe distinctif.";
   }
+  if (q.section === "Énigme") {
+    return "Ce n’est pas la bonne combinaison. Réessayez : vous devez résoudre l’énigme pour continuer.";
+  }
+  if (q.kind === "numeric-bonus") {
+    return "Valeur non retenue. Réessayez avec une estimation valide.";
+  }
+  if (result.timeout) {
+    return "Pas de point pour cette question. On passe à la suivante.";
+  }
 
   function shouldShowSignBriefing(q) {
     return q?.section === "Signe distinctif" && !seenSignBriefings.has(q.id);
@@ -1362,15 +1371,6 @@ function getWrongAnswerText(q, result) {
     elMolkkyForm.style.display = "none";
     elSliderForm.style.display = "none";
     elFreeForm.style.display = "none";
-  }
-  if (q.section === "Énigme") {
-    return "Ce n’est pas la bonne combinaison. Réessayez : vous devez résoudre l’énigme pour continuer.";
-  }
-  if (q.kind === "numeric-bonus") {
-    return "Valeur non retenue. Réessayez avec une estimation valide.";
-  }
-  if (result.timeout) {
-    return "Pas de point pour cette question. On passe à la suivante.";
   }
   return "Pas de point pour cette question. On passe à la suivante.";
 }
