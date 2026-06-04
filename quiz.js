@@ -13,6 +13,8 @@ let autoAdvanceTimeout = null;
 const answerRegexCache = new Map();
 const usedHints = new Set();
 const pointsByGroup = new Map();
+const seenSignBriefings = new Set();
+let signBriefingQuestionId = null;
 
 const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
@@ -294,7 +296,7 @@ function loadQuestion(index) {
   elQuestionTotal.textContent = QUIZ_TOTAL;
   updateScoreUI();
   elStageLabel.textContent = getDisplayStageLabel(q);
-  elSection.textContent = q.section;
+  elSection.textContent = getDisplaySectionLabel(q);
   const instructionsText = getInstructionsText(q);
   elInstructions.textContent = instructionsText;
   elInstructions.style.display = instructionsText ? "block" : "none";
@@ -304,8 +306,14 @@ function loadQuestion(index) {
 
   configureHint(q);
   configureModeBadge(q);
+  if (shouldShowSignBriefing(q)) {
+    renderSignBriefing(q);
+    configureTimer(null);
+    updateObjectivesPanel();
+    return;
+  }
   renderQuestionInput(q);
-  configureTimer(q.timer);
+  configureTimer(getQuestionTimer(q));
   updateObjectivesPanel();
 }
 
@@ -314,6 +322,7 @@ function renderQuestionInput(q) {
   if (elMolkkyObjectivesList) elMolkkyObjectivesList.innerHTML = "";
   if (elMatchRows) elMatchRows.innerHTML = "";
   elAckForm.style.display = "none";
+  elAckSubmit.textContent = "OK";
 
   if (q.kind === "molkky-start") {
     elMcqOptions.style.display = "none";
@@ -555,6 +564,21 @@ if (elAckSubmit) elAckSubmit.addEventListener("click", submitAcknowledgement);
 function submitAcknowledgement() {
   if (answered) return;
   const q = currentQuestion;
+  if (signBriefingQuestionId != null && q?.id === signBriefingQuestionId) {
+    signBriefingQuestionId = null;
+    seenSignBriefings.add(q.id);
+    answered = false;
+    elSection.textContent = getDisplaySectionLabel(q);
+    renderQuestionInput(q);
+    configureHint(q);
+    configureModeBadge(q);
+    const instructionsText = getInstructionsText(q);
+    elInstructions.textContent = instructionsText;
+    elInstructions.style.display = instructionsText ? "block" : "none";
+    elQuestionText.textContent = q.question;
+    configureTimer(getQuestionTimer(q));
+    return;
+  }
   if (q.kind !== "acknowledgement") return;
 
   answered = true;
@@ -658,7 +682,7 @@ function configureModeBadge(q) {
 
 function updateModeBadgeText() {
   if (!henryAwarded) {
-    elModeBadge.textContent = `Henryesque : ${henryRemaining} pts restants`;
+    elModeBadge.textContent = `Capital restant : ${henryRemaining} pts`;
   }
 }
 
@@ -1116,6 +1140,7 @@ function isHenryCorrectAnswer(q, value) {
 
 function shouldAutoAdvance(q, result) {
   const isLastAndCorrect = currentIndex >= QUESTIONS.length - 1 && Boolean(result.correct);
+  if (q?.section === "Vrai/Faux") return false;
   return !isLastAndCorrect;
 }
 
@@ -1144,8 +1169,14 @@ function getDisplayStageLabel(question) {
   const stageText = String(question?.stage || "");
   const stageMatch = stageText.match(/(Étape\s+\d+)/iu);
   const stageLabel = stageMatch ? stageMatch[1] : stageText;
+  if (question?.kind === "henry") return stageLabel.trim();
   const sectionLabel = question?.section ? ` — ${question.section}` : "";
   return `${stageLabel}${sectionLabel}`.trim();
+}
+
+function getDisplaySectionLabel(q) {
+  if (q?.kind === "henry") return "Questions bonus";
+  return q?.section || "";
 }
 
 function formatPoints(value) {
@@ -1268,6 +1299,9 @@ function shouldShowAnswerBubbleOnWrong(q) {
 }
 
 function getInstructionsText(q) {
+  if (q.kind === "henry") {
+    return "Cette série est chronométrée : -1 point par seconde et -15 points par mauvaise réponse.";
+  }
   if (q.instructions) return q.instructions;
   return "";
 }
@@ -1283,10 +1317,51 @@ function getAnswerTitle(q, result) {
 function getWrongAnswerText(q, result) {
   if (result?.wrongMessage) return result.wrongMessage;
   if (q.kind === "henry") {
-    return `Vous avez cliqué sur une vraie réponse. Le capital Henryesque perd ${HENRY_WRONG_PENALTY} points et continue jusqu’à la question suivante.`;
+    return `Vous avez cliqué sur une vraie réponse. Le capital perd ${HENRY_WRONG_PENALTY} points et continue jusqu’à la question suivante.`;
   }
   if (q.section === "Signe distinctif") {
     return "Ce n’est pas encore ça. Réessayez sur place jusqu’à trouver le bon signe distinctif.";
+  }
+
+  function shouldShowSignBriefing(q) {
+    return q?.section === "Signe distinctif" && !seenSignBriefings.has(q.id);
+  }
+
+  function getQuestionTimer(q) {
+    if (!q) return null;
+    if (q.section === "Signe distinctif" || q.section === "Énigme") return null;
+    return q.timer;
+  }
+
+  function getStageCoordinatesFromText(stageText) {
+    const match = String(stageText || "").match(/(\d+\.\d+\s*,\s*\d+\.\d+)/u);
+    return match ? match[1] : "";
+  }
+
+  function renderSignBriefing(q) {
+    signBriefingQuestionId = q.id;
+    elSection.textContent = "Accès lieu";
+    elQuestionText.textContent = "Avant le signe distinctif, rendez-vous d’abord aux coordonnées de cette étape.";
+    const stageCoordinates = getStageCoordinatesFromText(q.stage);
+    const details = stageCoordinates
+      ? `Coordonnées à rejoindre : ${stageCoordinates}. Quand vous êtes sur place, appuyez sur OK.`
+      : "Rejoignez les coordonnées indiquées pour cette étape, puis appuyez sur OK.";
+    elInstructions.textContent = details;
+    elInstructions.style.display = "block";
+    elHintWrap.style.display = "none";
+    elHintText.textContent = "";
+    elHintText.classList.remove("visible");
+    elHintMedia.classList.remove("visible");
+    elHintImage.removeAttribute("src");
+    elHintImage.alt = "";
+    elQuestionImage.style.display = "none";
+    elAckSubmit.textContent = "OK, on est sur place";
+    elAckForm.style.display = "block";
+    elMcqOptions.style.display = "none";
+    elMatchForm.style.display = "none";
+    elMolkkyForm.style.display = "none";
+    elSliderForm.style.display = "none";
+    elFreeForm.style.display = "none";
   }
   if (q.section === "Énigme") {
     return "Ce n’est pas la bonne combinaison. Réessayez : vous devez résoudre l’énigme pour continuer.";
