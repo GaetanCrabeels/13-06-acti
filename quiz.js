@@ -1331,48 +1331,48 @@ function getWrongAnswerText(q, result) {
   if (result.timeout) {
     return "Pas de point pour cette question. On passe à la suivante.";
   }
-
-  function shouldShowSignBriefing(q) {
-    return q?.section === "Signe distinctif" && !seenSignBriefings.has(q.id);
-  }
-
-  function getQuestionTimer(q) {
-    if (!q) return null;
-    if (q.section === "Signe distinctif" || q.section === "Énigme") return null;
-    return q.timer;
-  }
-
-  function getStageCoordinatesFromText(stageText) {
-    const match = String(stageText || "").match(/(\d+\.\d+\s*,\s*\d+\.\d+)/u);
-    return match ? match[1] : "";
-  }
-
-  function renderSignBriefing(q) {
-    signBriefingQuestionId = q.id;
-    elSection.textContent = "Accès lieu";
-    elQuestionText.textContent = "Avant le signe distinctif, rendez-vous d’abord aux coordonnées de cette étape.";
-    const stageCoordinates = getStageCoordinatesFromText(q.stage);
-    const details = stageCoordinates
-      ? `Coordonnées à rejoindre : ${stageCoordinates}. Quand vous êtes sur place, appuyez sur OK.`
-      : "Rejoignez les coordonnées indiquées pour cette étape, puis appuyez sur OK.";
-    elInstructions.textContent = details;
-    elInstructions.style.display = "block";
-    elHintWrap.style.display = "none";
-    elHintText.textContent = "";
-    elHintText.classList.remove("visible");
-    elHintMedia.classList.remove("visible");
-    elHintImage.removeAttribute("src");
-    elHintImage.alt = "";
-    elQuestionImage.style.display = "none";
-    elAckSubmit.textContent = "OK, on est sur place";
-    elAckForm.style.display = "block";
-    elMcqOptions.style.display = "none";
-    elMatchForm.style.display = "none";
-    elMolkkyForm.style.display = "none";
-    elSliderForm.style.display = "none";
-    elFreeForm.style.display = "none";
-  }
   return "Pas de point pour cette question. On passe à la suivante.";
+}
+
+function shouldShowSignBriefing(q) {
+  return q?.section === "Signe distinctif" && !seenSignBriefings.has(q.id);
+}
+
+function getQuestionTimer(q) {
+  if (!q) return null;
+  if (q.section === "Signe distinctif" || q.section === "Énigme") return null;
+  return q.timer;
+}
+
+function getStageCoordinatesFromText(stageText) {
+  const match = String(stageText || "").match(/(\d+\.\d+\s*,\s*\d+\.\d+)/u);
+  return match ? match[1] : "";
+}
+
+function renderSignBriefing(q) {
+  signBriefingQuestionId = q.id;
+  elSection.textContent = "Accès lieu";
+  elQuestionText.textContent = "Avant le signe distinctif, rendez-vous d’abord aux coordonnées de cette étape.";
+  const stageCoordinates = getStageCoordinatesFromText(q.stage);
+  const details = stageCoordinates
+    ? `Coordonnées à rejoindre : ${stageCoordinates}. Quand vous êtes sur place, appuyez sur OK.`
+    : "Rejoignez les coordonnées indiquées pour cette étape, puis appuyez sur OK.";
+  elInstructions.textContent = details;
+  elInstructions.style.display = "block";
+  elHintWrap.style.display = "none";
+  elHintText.textContent = "";
+  elHintText.classList.remove("visible");
+  elHintMedia.classList.remove("visible");
+  elHintImage.removeAttribute("src");
+  elHintImage.alt = "";
+  elQuestionImage.style.display = "none";
+  elAckSubmit.textContent = "OK, on est sur place";
+  elAckForm.style.display = "block";
+  elMcqOptions.style.display = "none";
+  elMatchForm.style.display = "none";
+  elMolkkyForm.style.display = "none";
+  elSliderForm.style.display = "none";
+  elFreeForm.style.display = "none";
 }
 
 function getResolvedNextBlock(block, q) {
