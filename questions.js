@@ -46,7 +46,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.192726, 4.394856",
-      label: "Étape suivante (chronométrée).",
+      label: "Énigme résolue, direction la prochaine étape !",
     },
   },
   {
@@ -60,7 +60,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Coordonnée validée",
-      label: "Étape suivante (chronométrée).",
+      label: "Regroupez-vous cette étape sera chronométrée. Prêt ? Partez ! ",
     },
   },
   {
@@ -85,8 +85,7 @@ const QUESTIONS = [
     options: ["Vrai", "Faux"],
     answer: "Faux",
     answerBubble:
-      "C’est une idée qui revient souvent, mais ici :\n• aucun village complet n’a été englouti\n• il y avait surtout des terres agricoles, des bois et quelques bâtiments isolés.\n\nContrairement à d’autres barrages en Europe, il n’y a pas de « ville fantôme » sous l’eau ici, même si le mythe est tentant.\n\nExemples célèbres ailleurs en Europe :\n• Lac de Resia : un village submergé dans les années 1950, seul le clocher de l’église dépasse encore.\n• Embalse de Sau : un ancien village repose sous le lac, et quand le niveau baisse, les ruines réapparaissent.\n• Lac de Serre-Ponçon : plusieurs villages déplacés ou détruits, avec la chapelle Saint-Michel conservée au milieu des eaux.\n• Ladybower Reservoir : le village de Derwent a été englouti, et lors des sécheresses, des vestiges réapparaissent.",
-    points: 150,
+      "C’est une idée qui revient souvent, mais ici :\n• aucun village complet n’a été englouti\n• il y avait surtout des terres agricoles, des bois et quelques bâtiments isolés.\n\nContrairement à d’autres barrages en Europe, il n’y a pas de « ville fantôme » sous l’eau ici, même si le mythe est tentant.\n\nExemples célèbres ailleurs en Europe :\n• 🇮🇹 Lac de Resia : un village submergé dans les années 1950, seul le clocher de l’église dépasse encore.\n • 🇪🇸 Embalse de Sau : un ancien village repose sous le lac, et quand le niveau baisse, les ruines réapparaissent.\n • 🇫🇷 Lac de Serre-Ponçon : plusieurs villages déplacés ou détruits, avec la chapelle Saint-Michel conservée au milieu des eaux.\n • 🇬🇧 Ladybower Reservoir : le village de Derwent a été englouti, et lors des sécheresses, des vestiges réapparaissent.", points: 150,
     timer: 10,
   },
   {
@@ -127,8 +126,8 @@ const QUESTIONS = [
     points: 150,
     timer: 20,
     nextBlock: {
-      summaryTemplate: "Avec cette épreuve vous avez remporté {points} points",
-      label: "Étape suivante (non chronométrée).",
+      summaryTemplate: "Avec cette épreuve vous avez remporté {points} points.",
+      label: "Épreuve terminée, passons à la suite !",
     },
   },
   {
@@ -144,7 +143,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Coordonnée validée",
-      label: 'Étape suivante (chronométrée)<br>Trouvez la ""mauvaise"" réponse<br>Prenez votre temps... mais pas trop 😉<br>+1 point/s • -15 points par erreur'
+      label: "L'étape suivante est chronométrée et assez particulière...<br>Trouvez tout sauf la bonne réponse<br>Prenez votre temps... mais pas trop 😉<br>+1 point/s • -15 points par erreur"
     },
   },
   {
@@ -325,7 +324,7 @@ const QUESTIONS = [
     points: 0,
     henryFinal: true,
     nextBlock: {
-      label: "Étape suivante (non chronométrée).",
+      label: "J'espère qu'Henry est fier de vous, Place à la suite !",
     },
   },
   {
@@ -361,7 +360,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.205750, 4.363997",
-      label: "Étape suivante (non chronométrée).",
+      label: "Toujours en vie ? Alors on continue la balade !",
     },
   },
   {
@@ -377,7 +376,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Coordonnée validée",
-      label: "Étape suivante (chronométrée).",
+      label: "Regroupez-vous cette étape sera chronométrée. Prêt ? Partez ! ",
     },
   },
   {
@@ -445,7 +444,7 @@ const QUESTIONS = [
       icon: "🕵️",
       teaseText: "On dit merci quiii?...",
       finalText: "Merci google!",
-      delayMs: 1600,
+      delayMs: 0,
     },
   },
   {
@@ -526,7 +525,7 @@ const QUESTIONS = [
     tolerance: 60,
     points: 250,
     answerDisplay: "environ 600 hectares (soit 6 km²)",
-    
+
   },
   {
     id: 41,
@@ -551,7 +550,7 @@ const QUESTIONS = [
   {
     id: 42,
     stage: "Étape 7 – 50.188382, 4.346416",
-    section: "Accès défi feuilles",
+    section: "Accès à un objectif annexe",
     kind: "numeric-bonus",
     type: "free",
     question: "Combien de mètres de berges voyez-vous ?",
@@ -564,12 +563,12 @@ const QUESTIONS = [
     maxValue: 18500,
     rejectOutOfRange: true,
     absurdWrongMessage:
-      "Même avec des yeux bioniques, impossible d’avoir ce nombre de berges 😄 Restez entre 0 et 18500.",
-    outOfRangeMessage: "Valeur invalide : entrez un nombre entre 0 et 18500 pour continuer.",
+      "Visiblement les cocktails sont plus forts que prévus 😄",
+    outOfRangeMessage: "Entrez un nombre raisonnable, faut pas abuser quand même ",
     nextBlock: {
-      title: "Défi feuilles débloqué",
-      value: "Coordonnée validée",
-      label: "Étape suivante (non chronométrée).",
+      title: "Objectif annexe débloqué",
+      value: "J'espère que vous n'avez pas réellement tenté de mesurer...",
+      label: "Finissons en harmonie avec la nature",
     },
   },
   {
@@ -577,15 +576,15 @@ const QUESTIONS = [
     stage: "Étape 7 – 50.188382, 4.346416",
     section: "Épreuve feuilles",
     kind: "acknowledgement",
-    question: "Rapportez un maximum de feuilles d’arbres différentes : elles seront comptées à l’arrivée.",
+    question: "Rapportez un maximum de feuilles d’arbres différentes",
     instructions:
-      "Règles : Rapportez des espèces de feuilles différentes, Chaque espèce vaut 50 points et sera comptabilisé à l'arrivée",
+      "Règles : Rapportez des espèces de feuilles différentes, Chaque espèce vaut 50 points et sera comptabilisée à l'arrivée",
     answerDisplay: "Épreuve feuilles enregistrée.",
     points: 0,
     nextBlock: {
       title: "Prochaine coordonnée",
       value: "50.186963, 4.374291",
-      label: "Étape suivante (non chronométrée).",
+      label: "Étape finale : J'espère que vous êtes prêts",
     },
   },
   {
@@ -593,7 +592,7 @@ const QUESTIONS = [
     stage: "Étape 8 – 50.186963, 4.374291",
     section: "Objet caché",
     kind: "acknowledgement",
-    question: "Retrouvez la carte de visite du créateur de ce quizz, elle est cachée quelque part autour de vous",
+    question: "Retrouvez la carte de visite du créateur de ce quizz, elle est cachée quelque part autour de vous.<br>J'ai bien le droit à quelques crédits quand même, non ?😄 ",
     instructions: "Appuyez sur OK pour afficher directement votre résultat final.",
     answerDisplay: "Objet caché à vérifier à l’arrivée.",
   },

@@ -166,7 +166,13 @@ elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectives
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
 renderMissionsPanel();
 updateObjectivesPanel();
-
+function replaceFlags(text) {
+  return text
+    .replace(/🇫🇷/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/fr.png" alt="France">')
+    .replace(/🇮🇹/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/it.png" alt="Italie">')
+    .replace(/🇪🇸/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/es.png" alt="Espagne">')
+    .replace(/🇬🇧/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/gb.png" alt="Royaume-Uni">');
+}
 function toggleFloatingPanel(panel, button, otherPanel, otherButton) {
   const willOpen = !panel.classList.contains("open");
   panel.classList.toggle("open", willOpen);
@@ -219,15 +225,15 @@ function renderMissionsPanel() {
           <strong class="floating-mission-title">${escapeHtml(mission.title)}</strong>
           <div class="floating-mission-items">
             ${(mission.items || [])
-              .map(
-                (item) => `
+          .map(
+            (item) => `
                   <label class="floating-mission-item">
                     <input type="checkbox" data-mission-item-id="${escapeHtml(item.id)}" />
                     <span>${escapeHtml(item.label)}</span>
                   </label>
                 `
-              )
-              .join("")}
+          )
+          .join("")}
           </div>
         </section>
       `
@@ -437,7 +443,13 @@ function configureQuestionImage(q) {
   elQuestionImage.alt = q.imageAlt || "Illustration de la question";
   elQuestionImage.style.display = "block";
 }
-
+function countryToFlag(code) {
+  return code
+    .toUpperCase()
+    .replace(/./g, c =>
+      String.fromCodePoint(127397 + c.charCodeAt())
+    );
+}
 function renderMcqOptions(q) {
   currentOptions.forEach((opt) => {
     const btn = document.createElement("button");
@@ -1045,7 +1057,7 @@ function showAnswerScreen(result, q) {
   const isStageTransition = result.correct && Boolean(q.nextBlock) && !isLast;
   elNextBtn.textContent =
     !result.correct &&
-q.section?.toLowerCase().includes("signe distinctif")
+      q.section?.toLowerCase().includes("signe distinctif")
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
@@ -1195,7 +1207,8 @@ function getDisplayStageLabel(question) {
 
 function getDisplaySectionLabel(q) {
   if (q?.kind === "henry") return "Questions bonus";
- return q?.section?.slice(0, 17)}
+  return q?.section?.slice(0, 17);
+}
 
 function formatPoints(value) {
   const formattedValue =
@@ -1251,6 +1264,8 @@ function setAnswerExactContent(text, q, asBubble) {
 }
 
 function formatAnswerBubbleHtml(text) {
+  console.log("TEXT BRUT :", JSON.stringify(text));
+
   const sections = text
     .split(/\n{2,}/u)
     .map((section) => section.trim())
@@ -1287,18 +1302,24 @@ function formatAnswerBubbleHtml(text) {
       const htmlGroups = groups
         .map((group) => {
           if (group.type === "bullet") {
-            const items = group.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+            const items = group.items
+              .map((item) => `<li>${replaceFlags(escapeHtml(item))}</li>`)
+              .join("");
+
             return `<ul class="answer-detail-list">${items}</ul>`;
           }
 
-          return `<p class="answer-detail-text">${group.items.map((item) => escapeHtml(item)).join(" ")}</p>`;
+          return `<p class="answer-detail-text">${group.items
+            .map((item) => replaceFlags(escapeHtml(item)))
+            .join(" ")
+            }</p>`;
         })
         .join("");
 
       return `<div class="answer-detail-block">${htmlGroups}</div>`;
     })
     .join("");
-
+  console.log("BLOCKS HTML :", blocks);
   return `<div class="answer-detail-wrap"><p class="answer-detail-intro">💡 Explication détaillée</p>${blocks}</div>`;
 }
 
@@ -1317,7 +1338,7 @@ function shouldShowAnswerBubbleOnWrong(q) {
 
 function getInstructionsText(q) {
   if (q.kind === "henry") {
-    return `Cette série est chronométrée : -${HENRY_TIME_PENALTY} point par seconde et -${HENRY_WRONG_PENALTY} points par mauvaise réponse.`;
+    return `Cette série est chronométrée : -${HENRY_TIME_PENALTY} point par seconde et -${HENRY_WRONG_PENALTY} points par "mauvaise" réponse.`;
   }
   if (q.instructions) return q.instructions;
   return "";
@@ -1374,7 +1395,7 @@ function renderSignBriefing(q) {
   const details = stageCoordinates
     ? `Coordonnées à rejoindre : <strong>${stageCoordinates}</strong>. Quand vous êtes sur place, appuyez sur OK.`
     : "Rejoignez les coordonnées indiquées pour cette étape, puis appuyez sur OK.";
-elInstructions.innerHTML = details;  elInstructions.style.display = "block";
+  elInstructions.innerHTML = details; elInstructions.style.display = "block";
   elHintWrap.style.display = "none";
   elHintText.textContent = "";
   elHintText.classList.remove("visible");

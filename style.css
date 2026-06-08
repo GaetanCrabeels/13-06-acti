@@ -18,7 +18,12 @@
   --radius: 14px;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --font-base: "Segoe UI", system-ui, sans-serif;
+  --font-base:  "Segoe UI",
+    "Segoe UI Emoji",
+    "Apple Color Emoji",
+    "Noto Color Emoji",
+    system-ui,
+    sans-serif;
 }
 
 *,
@@ -607,7 +612,12 @@ body {
   line-height: 1.55;
   color: #1f3f1f;
 }
-
+.flag-emoji {
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
 .answer-detail-list {
   margin: 8px 0 0 18px;
   padding: 0;
