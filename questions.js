@@ -7,8 +7,8 @@
 const QUESTIONS = [
   {
     id: 3,
-    stage: "Étape 2 – 50.191682, 4.383208",
-    section: "Signe distinctif",
+    stage: "Étape 2  – 50.191682, 4.383208 ",
+    section: "Signe distinctif – 50.191682, 4.383208",
     type: "free",
     question:
       "Quel mot imaginaire est formé par les première lettres des panneaux directionnels que vous voyez?",
@@ -41,6 +41,7 @@ const QUESTIONS = [
       penalty: -50,
       label: "Voir l’indice (-50 points)",
     },
+    instructions: "Décoder le code ci-dessus",
     answerDisplay: "La bonne piste vous menait aux coordonnées suivantes.",
     nextBlock: {
       title: "Prochaine coordonnée",
@@ -51,13 +52,11 @@ const QUESTIONS = [
   {
     id: 5,
     stage: "Étape 3 – 50.192726, 4.394856",
-    section: "Signe distinctif",
+    section: "Signe distinctif – 50.192726, 4.394856",
     type: "free",
     question:
       "Dans le silence paisible des sentiers apprivoisés, là où ni moteurs pressés ni tumulte ne viennent troubler la lente respiration du paysage, vous avancez sur un ruban discret qui enlace la nature et guide les voyageurs patients. Dites-moi, sous vos pas et au fil de cette voie dédiée aux marcheurs et aux cyclistes rêveurs, quel est le nombre secret qui baptise ce chemin où le temps semble suspendu ?",
-    answerPattern: "^.*109.*$",
-    points: 0,
-    timer: 15,
+    answerPattern: "^.*\\b109\\b.*$", points: 0,
     nextBlock: {
       title: "Lieu validé",
       value: "Coordonnée validée",
@@ -128,8 +127,6 @@ const QUESTIONS = [
     points: 150,
     timer: 20,
     nextBlock: {
-      title: "Prochaine coordonnée",
-      value: "50.201160, 4.387284",
       summaryTemplate: "Avec cette épreuve vous avez remporté {points} points",
       label: "Étape suivante (non chronométrée).",
     },
@@ -137,7 +134,7 @@ const QUESTIONS = [
   {
     id: 11,
     stage: "Étape 4 – 50.201160, 4.387284",
-    section: "Signe distinctif",
+    section: "Signe distinctif – 50.201160, 4.387284",
     type: "free",
     question: "Quels points noeuds indique le panneau le plus proche?",
     instructions: "Réponse à relever sur place pour prouver que vous êtes bien au bon endroit.",
@@ -147,7 +144,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Coordonnée validée",
-      label: "Étape suivante (chronométrée).",
+      label: 'Étape suivante (chronométrée)<br>Trouvez la ""mauvaise"" réponse<br>Prenez votre temps... mais pas trop 😉<br>+1 point/s • -15 points par erreur'
     },
   },
   {
@@ -328,15 +325,13 @@ const QUESTIONS = [
     points: 0,
     henryFinal: true,
     nextBlock: {
-      title: "Prochaine coordonnée",
-      value: "50.202982, 4.376316",
       label: "Étape suivante (non chronométrée).",
     },
   },
   {
     id: 28,
     stage: "Étape 5 – 50.202982, 4.376316",
-    section: "Signe distinctif",
+    section: "Signe distinctif – 50.202982, 4.376316",
     type: "free",
     question:
       "Enracinés précisément au point qui vous a été confié, sans céder à la tentation de vous en éloigner, laissez votre regard explorer les signes qui s’offrent à vous sans faire un pas de plus : quels sont donc les noms des villages qui se révèlent, inscrits sur les panneaux visibles depuis ce lieu exact ?",
@@ -354,7 +349,7 @@ const QUESTIONS = [
     section: "Énigme",
     type: "free",
     question: "Décodez : JAJPJ/GDMDWWP",
-    instructions: "Décodage 3310 : validez avec les coordonnées, avec ou sans séparateurs.",
+    instructions: "Tiens encore un code ?",
     answerPattern: "^\\D*50\\D*205750\\D*4\\D*363997\\D*$",
     points: 250,
     hint: {
@@ -372,7 +367,7 @@ const QUESTIONS = [
   {
     id: 30,
     stage: "Étape 6 – 50.205750, 4.363997",
-    section: "Signe distinctif",
+    section: "Signe distinctif – 50.205750, 4.363997",
     type: "free",
     question:
       "Contemplez l’aval de la vallée sèche d’Erpion, livre ancien aux pages de silence craquelé… Vers quel azimut de la rose des vents s’incline votre être ? Quelle boussole borgne, secrètement fiévreuse, oriente vos pas dans cet immobile suspendu ?",
@@ -393,12 +388,12 @@ const QUESTIONS = [
     question:
       "Dans quelle région naturelle vallonnée, connue pour ses forêts et ses plateaux, se situent les lacs ?",
     options: [
-      "la Fagne et la Famenne (zone de transition)",
+      "la Fagne et la Famenne",
       "la Lorraine belge et la Gaume",
       "le Condroz et le Pays de Herve",
       "l’Ardenne et la Hesbaye",
     ],
-    answer: "la Fagne et la Famenne (zone de transition)",
+    answer: "la Fagne et la Famenne",
     points: 250,
     timer: 20,
   },
@@ -407,7 +402,7 @@ const QUESTIONS = [
     stage: "Étape 6 – 50.205750, 4.363997",
     section: "Devinettes",
     type: "mcq",
-    question: "Quelle est l’altitude approximative de la région des lacs (ordre de grandeur) ?",
+    question: "Quelle est l’altitude approximative de la région des lacs?",
     options: [
       "entre 200 et 300 mètres au-dessus du niveau de la mer",
       "entre 20 et 30 mètres au-dessus du niveau de la mer",
@@ -448,9 +443,9 @@ const QUESTIONS = [
     pointsPerMatch: 30,
     easterEgg: {
       icon: "🕵️",
-      teaseText: "Mmmh… ces données sont tombées du ciel ?",
-      finalText: "On dit merci quiii? merci google!",
-      delayMs: 1300,
+      teaseText: "On dit merci quiii?...",
+      finalText: "Merci google!",
+      delayMs: 1600,
     },
   },
   {
@@ -499,12 +494,12 @@ const QUESTIONS = [
     question:
       "Quel secteur économique historique de la région a le + bénéficié de la gestion de l’eau du barrage de l’eau d’heure ?",
     options: [
-      "l’industrie (sidérurgie, notamment dans le bassin de Charleroi)",
+      "l’industrie",
       "l’horlogerie artisanale",
       "la culture de la vigne",
       "la construction navale",
     ],
-    answer: "l’industrie (sidérurgie, notamment dans le bassin de Charleroi)",
+    answer: "Surtout la sidérurgie, notamment dans le bassin de CharleroI",
     points: 250,
     timer: 20,
   },
@@ -530,13 +525,8 @@ const QUESTIONS = [
     target: 600,
     tolerance: 60,
     points: 250,
-    bonusPoints: 50,
     answerDisplay: "environ 600 hectares (soit 6 km²)",
-    bonusReveal: {
-      first: "J’espère que vous avez pris votre temps pour choisir la réponse car…",
-      second: "elle vous donne des points bonus !",
-      delayMs: 1300,
-    },
+    
   },
   {
     id: 41,
@@ -565,7 +555,7 @@ const QUESTIONS = [
     kind: "numeric-bonus",
     type: "free",
     question: "Combien de mètres de berges voyez-vous ?",
-    instructions: "Entrez une estimation entre 0 et 18500.",
+    instructions: "Prenez votre temps et vos jumelles",
     answerPattern: "^-?\\d+$",
     answerDisplay: "Bonus berges enregistré.",
     points: 0,
@@ -589,7 +579,7 @@ const QUESTIONS = [
     kind: "acknowledgement",
     question: "Rapportez un maximum de feuilles d’arbres différentes : elles seront comptées à l’arrivée.",
     instructions:
-      "Règles : 1) Toutes les feuilles doivent être différentes. 2) Comptage à l’arrivée. 3) Chaque espèce de feuille différente vaut 50 points. Appuyez sur OK pour afficher la prochaine coordonnée.",
+      "Règles : Rapportez des espèces de feuilles différentes, Chaque espèce vaut 50 points et sera comptabilisé à l'arrivée",
     answerDisplay: "Épreuve feuilles enregistrée.",
     points: 0,
     nextBlock: {

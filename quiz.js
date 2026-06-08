@@ -20,7 +20,7 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_TIME_PENALTY = 1;
 const HENRY_WRONG_PENALTY = 15;
-const ANSWER_AUTO_SKIP_DELAY = 1000;
+const ANSWER_AUTO_SKIP_DELAY = 6000;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
 const ABSURD_VALUE_MULTIPLIER = 2;
 const POINTS_DECIMAL_PRECISION = 100;
@@ -296,7 +296,7 @@ function loadQuestion(index) {
   elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
   elQuestionTotal.textContent = QUIZ_TOTAL;
   updateScoreUI();
-  elStageLabel.textContent = getDisplayStageLabel(q);
+  elStageLabel.innerHTML = getDisplayStageLabel(q);
   elSection.textContent = getDisplaySectionLabel(q);
   const instructionsText = getInstructionsText(q);
   elInstructions.textContent = instructionsText;
@@ -846,7 +846,6 @@ function handleHenryAnswer(result, q) {
           ...result,
           correct: true,
           customTitle: "Quiz Henryesque terminé !",
-          answerDisplay: `Bien joué, vous avez fini le quizz Henryesque et accumulé ${henryRemaining} points.`,
         },
         q
       );
@@ -1027,7 +1026,8 @@ function showAnswerScreen(result, q) {
   const isLast = currentIndex >= QUESTIONS.length - 1;
   const isStageTransition = result.correct && Boolean(q.nextBlock) && !isLast;
   elNextBtn.textContent =
-    !result.correct && q.section === "Signe distinctif"
+    !result.correct &&
+q.section?.toLowerCase().includes("signe distinctif")
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
@@ -1054,7 +1054,7 @@ function renderNextBlock(block) {
   elCoordinatesTitle.textContent = resolvedBlock.title || "Suite";
   elCoordinatesValue.textContent = resolvedBlock.value || "";
   elCoordinatesValue.classList.toggle("textual", !looksLikeCoordinates(resolvedBlock.value || ""));
-  elCoordinatesLabel.textContent = resolvedBlock.label || "";
+  elCoordinatesLabel.innerHTML = resolvedBlock.label || "";
 }
 
 elNextBtn.addEventListener("click", () => {
@@ -1177,8 +1177,7 @@ function getDisplayStageLabel(question) {
 
 function getDisplaySectionLabel(q) {
   if (q?.kind === "henry") return "Questions bonus";
-  return q?.section || "";
-}
+ return q?.section?.slice(0, 17)}
 
 function formatPoints(value) {
   const formattedValue =
@@ -1190,7 +1189,7 @@ function formatPoints(value) {
 
 function shouldSkipRetryOnWrong(q) {
   if (!q) return true;
-  if (q.section === "Signe distinctif" || q.section === "Énigme") return false;
+  if (q.section?.toLowerCase().includes("signe distinctif") || q.section === "Énigme") return false;
   if (q.kind === "numeric-bonus") return false;
   return true;
 }
@@ -1206,7 +1205,6 @@ function formatOptionLabel(value) {
 }
 
 function getAnswerBubbleText(q, result) {
-  if (q.kind === "henry") return `La vraie réponse à éviter était : ${getAnswerDisplay(q)}`;
   if (q.answerBubble) return q.answerBubble;
   const answerDisplay = getAnswerDisplay(q);
   if (result?.answerDisplay && result.answerDisplay !== answerDisplay) return result.answerDisplay;
@@ -1320,7 +1318,7 @@ function getWrongAnswerText(q, result) {
   if (q.kind === "henry") {
     return `Vous avez cliqué sur une vraie réponse. Le capital perd ${HENRY_WRONG_PENALTY} points et continue jusqu’à la question suivante.`;
   }
-  if (q.section === "Signe distinctif") {
+  if (q.section?.toLowerCase().includes("signe distinctif")) {
     return "Ce n’est pas encore ça. Réessayez sur place jusqu’à trouver le bon signe distinctif.";
   }
   if (q.section === "Énigme") {
@@ -1336,12 +1334,12 @@ function getWrongAnswerText(q, result) {
 }
 
 function shouldShowSignBriefing(q) {
-  return q?.section === "Signe distinctif" && !seenSignBriefings.has(q.id);
+  return q.section?.toLowerCase().includes("signe distinctif") && !seenSignBriefings.has(q.id);
 }
 
 function getQuestionTimer(q) {
   if (!q) return null;
-  if (q.section === "Signe distinctif" || q.section === "Énigme") return null;
+  if (q.section?.toLowerCase().includes("signe distinctif") || q.section === "Énigme") return null;
   return q.timer;
 }
 
@@ -1353,13 +1351,12 @@ function getStageCoordinatesFromText(stageText) {
 function renderSignBriefing(q) {
   signBriefingQuestionId = q.id;
   elSection.textContent = "Accès à l’étape";
-  elQuestionText.textContent = "Avant le signe distinctif, rendez-vous d’abord aux coordonnées de cette étape.";
+  elQuestionText.textContent = "Rendez-vous d’abord aux coordonnées de cette étape.";
   const stageCoordinates = getStageCoordinatesFromText(q.stage);
   const details = stageCoordinates
-    ? `Coordonnées à rejoindre : ${stageCoordinates}. Quand vous êtes sur place, appuyez sur OK.`
+    ? `Coordonnées à rejoindre : <strong>${stageCoordinates}</strong>. Quand vous êtes sur place, appuyez sur OK.`
     : "Rejoignez les coordonnées indiquées pour cette étape, puis appuyez sur OK.";
-  elInstructions.textContent = details;
-  elInstructions.style.display = "block";
+elInstructions.innerHTML = details;  elInstructions.style.display = "block";
   elHintWrap.style.display = "none";
   elHintText.textContent = "";
   elHintText.classList.remove("visible");
@@ -1380,7 +1377,7 @@ function getResolvedNextBlock(block, q) {
   if (!block) return null;
   if (q?.henryFinal) {
     return {
-      title: "Rendez-vous aux coordonnées suivantes",
+      title: "Bien joué, questionnaire Henryesque terminé ! Prochaine coordonnée à la page suivante",
       value: block.value || "",
       label: `Vous avez récolté ${henryRemaining} points lors des questions Henryesque. ${block.label || ""}`.trim(),
     };
