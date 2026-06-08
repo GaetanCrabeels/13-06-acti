@@ -1026,8 +1026,6 @@ body {
 
 .floating-mission {
   display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
   gap: 10px;
   border: 1px solid var(--clr-border);
   border-radius: 12px;
@@ -1035,15 +1033,25 @@ body {
   background: #f9f7f2;
 }
 
-.floating-mission strong {
+.floating-mission-title {
   display: block;
   color: var(--clr-primary-dark);
   font-size: 0.92rem;
 }
 
-.floating-mission small {
-  display: block;
-  margin-top: 2px;
+.floating-mission-items {
+  display: grid;
+  gap: 8px;
+}
+
+.floating-mission-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+}
+
+.floating-mission-item span {
   color: var(--clr-text-muted);
   line-height: 1.45;
 }
