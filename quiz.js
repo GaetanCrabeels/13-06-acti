@@ -135,18 +135,28 @@ const missionCards = [
   {
     id: "photo",
     title: "Mission photo",
-    description:
-      "Photo de groupe avec papa qui fait un signe de victoire, un petit oiseau visible, votre reflet dans l’eau et une pierre en forme de cœur.",
+    items: [
+      { id: "photo-victoire", label: "Papa fait un signe de victoire." },
+      { id: "photo-oiseau", label: "Un petit oiseau est visible." },
+      { id: "photo-reflet", label: "Votre reflet apparaît dans l’eau." },
+      { id: "photo-coeur", label: "Une pierre en forme de cœur est visible." },
+    ],
   },
   {
-    id: "doigts-pieds",
+    id: "collective",
     title: "Mission collective",
-    description: "Photo avec exactement 18 doigts visibles et 7 pieds visibles, ni plus ni moins.",
+    items: [
+      { id: "collective-doigts", label: "La photo montre exactement 18 doigts visibles." },
+      { id: "collective-pieds", label: "La photo montre exactement 7 pieds visibles." },
+    ],
   },
   {
-    id: "colour-hunt",
+    id: "lac",
     title: "Mission lac",
-    description: "Retrouvez dans le lac un bouchon rouge usé (ou un objet rouge similaire difficile à repérer) et prenez-le en photo.",
+    items: [
+      { id: "lac-objet", label: "Un bouchon rouge usé (ou objet rouge similaire) a été retrouvé." },
+      { id: "lac-photo", label: "L’objet retrouvé a été pris en photo." },
+    ],
   },
 ];
 
@@ -205,23 +215,31 @@ function renderMissionsPanel() {
   elMissionsContent.innerHTML = missionCards
     .map(
       (mission) => `
-        <label class="floating-mission">
-          <input type="checkbox" data-mission-id="${escapeHtml(mission.id)}" />
-          <span>
-            <strong>${escapeHtml(mission.title)}</strong>
-            <small>${escapeHtml(mission.description)}</small>
-          </span>
-        </label>
+        <section class="floating-mission">
+          <strong class="floating-mission-title">${escapeHtml(mission.title)}</strong>
+          <div class="floating-mission-items">
+            ${(mission.items || [])
+              .map(
+                (item) => `
+                  <label class="floating-mission-item">
+                    <input type="checkbox" data-mission-item-id="${escapeHtml(item.id)}" />
+                    <span>${escapeHtml(item.label)}</span>
+                  </label>
+                `
+              )
+              .join("")}
+          </div>
+        </section>
       `
     )
     .join("");
 
   Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
-      const missionId = checkbox.dataset.missionId;
-      if (!missionId) return;
-      if (checkbox.checked) completedMissions.add(missionId);
-      else completedMissions.delete(missionId);
+      const missionItemId = checkbox.dataset.missionItemId;
+      if (!missionItemId) return;
+      if (checkbox.checked) completedMissions.add(missionItemId);
+      else completedMissions.delete(missionItemId);
       updateMissionProgress();
     });
   });
@@ -229,7 +247,7 @@ function renderMissionsPanel() {
 }
 
 function updateMissionProgress() {
-  const total = missionCards.length;
+  const total = missionCards.reduce((count, mission) => count + (mission.items?.length ?? 0), 0);
   const done = completedMissions.size;
   const ratio = total === 0 ? 0 : done / total;
   if (elMissionsProgressText) {
