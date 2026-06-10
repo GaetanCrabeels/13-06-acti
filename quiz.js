@@ -19,69 +19,7 @@ const app = initializeApp(firebaseConfig);
 // 2. init Database
 let db = getDatabase(app);
 initSync(db);
-function initSync(firebaseDatabase) {
-  console.log("initSync appelé");
 
-  db = firebaseDatabase;
-  quizRef = ref(db, "quiz/state");
-
-  onValue(quizRef, (snapshot) => {
-    const data = snapshot.val();
-
-    console.log("REMOTE UPDATE", Date.now(), snapshot.val());
-    console.log(
-      "LOCAL =", currentIndex, score,
-      "REMOTE =", data?.currentIndex, data?.score
-    );
-
-    if (!data) return;
-
-    isRemoteUpdate = true;
-
-    if (
-      data.currentIndex !== undefined &&
-      data.currentIndex !== currentIndex
-    ) {
-      currentIndex = data.currentIndex;
-      showScreen("question");
-      loadQuestion(currentIndex);
-    }
-
-    if (
-      data.score !== undefined &&
-      data.score !== score
-    ) {
-      score = data.score;
-      updateScoreUI();
-    }
-
-    isRemoteUpdate = false;
-  });
-
-  syncEnabled = true;
-
-  console.log("Sync activée");
-}
-function syncState() {
-  console.log("SYNC", Date.now());
-
-  console.log(
-    "syncState()",
-    "enabled=", syncEnabled,
-    "quizRef=", !!quizRef,
-    "remote=", isRemoteUpdate
-  );
-
-  if (!syncEnabled || !quizRef) return;
-  if (isRemoteUpdate) return;
-
-  set(quizRef, {
-    currentIndex,
-    score
-  })
-    .then(() => console.log("Firebase OK"))
-    .catch(err => console.error("Firebase ERROR", err));
-}
 let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
@@ -248,7 +186,63 @@ const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
+function initSync(firebaseDatabase) {
+  console.log("initSync appelé");
+
+  db = firebaseDatabase;
+  quizRef = ref(db, "quiz/state");
+
+  onValue(quizRef, (snapshot) => {
+    const data = snapshot.val();
+
+    console.log("REMOTE UPDATE", Date.now(), snapshot.val());
+    console.log(
+      "LOCAL =", currentIndex, score,
+      "REMOTE =", data?.currentIndex, data?.score
+    );
+
+    if (!data) return;
+
+    isRemoteUpdate = true;
+
+    if (
+      data.currentIndex !== undefined &&
+      data.currentIndex !== currentIndex
+    ) {
+      currentIndex = data.currentIndex;
+      showScreen("question");
+      loadQuestion(currentIndex);
+    }
+
+    if (
+      data.score !== undefined &&
+      data.score !== score
+    ) {
+      score = data.score;
+      updateScoreUI();
+    }
+
+    isRemoteUpdate = false;
+  });
+
+  syncEnabled = true;
+
+  console.log("Sync activée");
+}
+function syncState() {
+  if (!syncEnabled || !quizRef) return;
+  if (isRemoteUpdate) return;
+
+  set(quizRef, {
+    currentIndex,
+    score,
+    screen: currentScreen
+  });
+}
+
+
 renderMissionsPanel();
+
 updateObjectivesPanel();
 function replaceFlags(text) {
   return text
