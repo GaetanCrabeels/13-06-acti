@@ -143,7 +143,7 @@ const QUESTIONS = [
     nextBlock: {
       title: "Lieu validé",
       value: "Coordonnée validée",
-      label: "L'étape suivante est chronométrée et assez particulière...<br>Trouvez tout sauf la bonne réponse<br>Prenez votre temps... mais pas trop 😉<br>+1 point/s • -15 points par erreur"
+      label: "L'étape suivante est chronométrée et assez particulière...<br>Trouvez tout sauf la bonne réponse<br>Prenez votre temps... mais pas trop 😉<br>Vous démarrerez à 500, vous perdrez 1 point par seconde et 15 par 'mauvaise réponse'"
     },
   },
   {
@@ -152,7 +152,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quelle guerre a-t-il vécue ?",
-    options: ["La guerre de Chypre", "La guerre de Chyp’Rire", "La guerre de Chy-près"],
+    options: ["La guerre de Chypre", "La guerre de Cent Ans", "La guerre Froide"],
     answer: "La guerre de Chypre",
     points: 0,
   },
@@ -168,8 +168,7 @@ const QUESTIONS = [
       "Un vélo et une gourde Ultra",
       "Un VTT et une bouteille d’Ultra",
     ],
-    answer: "Un vélo et une bouteille d’Ultra",
-    answerDisplay: "Un vélo et une bouteille d’Ultra comme gourde",
+    answers: ["Un vélo et une bouteille d’Ultra", "Un VTT et une bouteille d’Ultra"],
     points: 0,
   },
   {
@@ -178,8 +177,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Dans quelle rue a-t-il grandi ?",
-    options: ["Rue planche au pêcheur", "Rue planche au pécheur", "Rue planche aux pêcheurs"],
-    answer: "Rue planche au pêcheur",
+    options: ["Rue de la planche-au-pêcheur", "Rue planche au pêcheur", "Rue planche aux pêcheurs"],
+    answer: "Rue de la planche-au-pêcheur",
     points: 0,
   },
   {
@@ -198,7 +197,7 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Où a t il passé ses dernières vacances ?",
-    options: ["Albanie", "Alba-nid", "Alba-nuit"],
+    options: ["Albanie", "Parme", "Croatie"],
     answer: "Albanie",
     points: 0,
   },
@@ -218,10 +217,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est son totem ?",
-    options: ["Eyra", "Mowgli", "Baloo"],
-    answer: "Eyra",
-    answers: ["Eyra"],
-    answerDisplay: "Eyra",
+    options: ["Eyra", "Jaguarondi", "Chat-loutre", "Jaguar"],
+    answers: ["Eyra", "Jaguarondi", "Chat-loutre"],
     points: 0,
   },
   {
@@ -233,7 +230,6 @@ const QUESTIONS = [
     question: "Quelle était sa première voiture ?",
     options: ["Golf", "Volkswagen", "Volksvagen"],
     answers: ["Golf", "Volkswagen"],
-    answerDisplay: "Golf / Volkswagen",
     points: 0,
   },
   {
@@ -252,8 +248,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est le pays le plus lointain où il s’est rendu en voiture ?",
-    options: ["Malte", "Turquie", "Grèce"],
-    answer: "Malte",
+    options: ["Malte", "Turquie", "Iran"],
+    answer: "Iran",
     points: 0,
   },
   {
@@ -265,7 +261,6 @@ const QUESTIONS = [
     question: "Quel était le nom de son école primaire ?",
     options: ["Saint-Jacques", "Saint-Jacque", "Sainte-Jacques"],
     answer: "Saint-Jacques",
-    answerDisplay: "Saint-Jacques",
     points: 0,
   },
   {
@@ -274,9 +269,9 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est l'endroit le plus lointain où il ait voyagé ?",
-    options: ["Saint-Louis USA", "Tokyo", "Le Caire"],
-    answers: ["Saint-Louis USA", "Saint Louis USA"],
-    answerDisplay: "Saint-Louis USA",
+    options: ["Saint-Louis, USA", "Tokyo", "La Réunion"],
+    answer: "La Réunion",
+    answerDisplay: "La Réunion",
     points: 0,
   },
   {
@@ -286,7 +281,7 @@ const QUESTIONS = [
     kind: "henry",
     type: "mcq",
     question: "Dans quelle ville habitait sa grand mère paternelle ?",
-    options: ["Courcelles", "Corcelles", "Courcelle"],
+    options: ["Courcelles", "Pont-à-Celles", "Courcelle"],
     answer: "Courcelles",
     answerDisplay: "Courcelles",
     points: 0,
@@ -498,7 +493,9 @@ const QUESTIONS = [
       "la culture de la vigne",
       "la construction navale",
     ],
-    answer: "Surtout la sidérurgie, notamment dans le bassin de CharleroI",
+    answer: "l’industrie",
+    answerDisplay: "Surtout la sidérurgie, notamment dans le bassin de Charleroi",
+
     points: 250,
     timer: 20,
   },
@@ -564,7 +561,7 @@ const QUESTIONS = [
     rejectOutOfRange: true,
     absurdWrongMessage:
       "Visiblement les cocktails sont plus forts que prévus 😄",
-    outOfRangeMessage: "Entrez un nombre raisonnable, faut pas abuser quand même ",
+    outOfRangeMessage: "Visiblement les cocktails sont plus forts que prévus 😄",
     nextBlock: {
       title: "Objectif annexe débloqué",
       value: "J'espère que vous n'avez pas réellement tenté de mesurer...",
@@ -592,8 +589,8 @@ const QUESTIONS = [
     stage: "Étape 8 – 50.186963, 4.374291",
     section: "Objet caché",
     kind: "acknowledgement",
+    directResult: true,
     question: "Retrouvez la carte de visite du créateur de ce quizz, elle est cachée quelque part autour de vous.<br>J'ai bien le droit à quelques crédits quand même, non ?😄 ",
-    instructions: "Appuyez sur OK pour afficher directement votre résultat final.",
     answerDisplay: "Objet caché à vérifier à l’arrivée.",
   },
 ];

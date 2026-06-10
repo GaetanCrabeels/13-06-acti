@@ -25,13 +25,35 @@
     system-ui,
     sans-serif;
 }
-
-*,
 *::before,
 *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+body {
+  font-family: var(--font-base);
+  background: var(--clr-bg);
+  color: var(--clr-text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: var(--header-offset) 16px 16px;
+  background-image: url("...");
 }
 
 body {
@@ -130,7 +152,6 @@ body {
 }
 
 .start-rules ul {
-  list-style: none;
   font-size: 0.92rem;
   color: var(--clr-text-muted);
   display: flex;
@@ -1066,7 +1087,28 @@ body {
   line-height: 1.45;
 }
 
-@media (max-width: 640px) {
+/* =========================
+   TABLETTES & MOBILES
+   ========================= */
+
+@media (max-width: 768px) {
+
+  :root {
+    --header-offset: 84px;
+  }
+
+  body {
+    padding:
+      calc(var(--header-offset) + env(safe-area-inset-top))
+      10px
+      calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
   .quiz-header {
     flex-direction: column;
     align-items: stretch;
@@ -1076,12 +1118,70 @@ body {
     align-items: flex-start;
   }
 
+  .question-text {
+    font-size: 1.08rem;
+    line-height: 1.55;
+  }
+
+  .question-instructions {
+    font-size: 0.95rem;
+  }
+
+  .answer-title {
+    font-size: 1.2rem;
+  }
+
+  .answer-icon {
+    font-size: 3rem;
+  }
+
+  .coordinates-value {
+    font-size: 1rem;
+    word-break: break-word;
+  }
+
+  .coordinates-value.textual {
+    font-size: 1.05rem;
+  }
+
+  .btn {
+    font-size: 1rem;
+  }
+
+  #free-form {
+    flex-direction: column;
+  }
+
+  #free-input {
+    font-size: 16px;
+  }
+
   #mcq-options {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .option-btn {
+    min-height: 60px;
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+
+  .timer-card {
+    padding: 12px 16px;
+  }
+
+  .timer-display {
+    font-size: 1.3rem;
   }
 
   .match-row {
     grid-template-columns: 1fr;
+  }
+
+  .match-select {
+    min-height: 48px;
+    font-size: 16px;
   }
 
   .hint-wrap {
@@ -1092,43 +1192,109 @@ body {
     top: 8px;
     left: 8px;
     right: 8px;
-    gap: 10px;
-  }
-
-  .floating-panel {
-    top: calc(100% + 6px);
-    max-height: 70vh;
-    overflow: auto;
+    gap: 8px;
   }
 
   .floating-tab-group {
-    width: calc(41% - 5px);
+    width: calc(40% - 4px);
   }
 
   .floating-score {
-    flex: 0 0 18%;
+    flex: 0 0 20%;
+  }
+
+  .floating-tab-title {
+    display: none;
+  }
+
+  .floating-tab-progress-text {
+    font-size: 0.75rem;
+  }
+
+  .floating-tab-button {
+    padding: 8px;
   }
 
   .floating-score .score-badge {
     font-size: 0.8rem;
-    padding: 6px 10px;
+    padding: 6px 8px;
+  }
+
+  .floating-panel {
+    width: calc(100vw - 20px);
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+
+  .answer-exact.info-bubble-detailed {
+    padding: 12px;
+  }
+
+  .answer-detail-block {
+    padding: 10px;
   }
 }
 
-@media (max-width: 420px) {
-  #free-form {
-    flex-direction: column;
+/* =========================
+   PETITS SMARTPHONES
+   ========================= */
+
+@media (max-width: 480px) {
+
+  .start-emoji {
+    font-size: 64px;
+  }
+
+  .start-title {
+    font-size: 1.7rem;
   }
 
   .card {
-    padding: 18px;
+    padding: 14px;
   }
 
-  .hint-text {
-    font-size: 0.88rem;
+  .question-text {
+    font-size: 1rem;
+  }
+
+  .question-instructions {
+    font-size: 0.9rem;
   }
 
   .score-big {
-    font-size: 3.1rem;
+    font-size: 2.8rem;
+  }
+
+  .answer-title {
+    font-size: 1.1rem;
+  }
+
+  .answer-icon {
+    font-size: 2.6rem;
+  }
+
+  .points-badge {
+    font-size: 0.82rem;
+  }
+
+  .coordinates-value {
+    font-size: 0.95rem;
+  }
+
+  .floating-tabs {
+    gap: 6px;
+  }
+
+  .floating-tab-group {
+    width: 38%;
+  }
+
+  .floating-score {
+    flex: 0 0 24%;
+  }
+
+  .floating-score .score-badge {
+    font-size: 0.72rem;
+    padding: 5px 6px;
   }
 }

@@ -20,7 +20,7 @@ const HENRY_STARTING_SCORE = 500;
 const HENRY_REVEAL_DELAY = 900;
 const HENRY_TIME_PENALTY = 1;
 const HENRY_WRONG_PENALTY = 15;
-const ANSWER_AUTO_SKIP_DELAY = 6000;
+const ANSWER_AUTO_SKIP_DELAY = 600;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
 const ABSURD_VALUE_MULTIPLIER = 2;
 const POINTS_DECIMAL_PRECISION = 100;
@@ -138,7 +138,7 @@ const missionCards = [
     items: [
       { id: "photo-victoire", label: "Papa fait un signe de victoire." },
       { id: "photo-oiseau", label: "Un petit oiseau est visible." },
-      { id: "photo-reflet", label: "Votre reflet apparaît dans l’eau." },
+      { id: "photo-reflet", label: "Le reflet de tout le monde apparaît dans l’eau." },
       { id: "photo-coeur", label: "Une pierre en forme de cœur est visible." },
     ],
   },
@@ -146,8 +146,7 @@ const missionCards = [
     id: "collective",
     title: "Mission collective",
     items: [
-      { id: "collective-doigts", label: "La photo montre exactement 18 doigts visibles." },
-      { id: "collective-pieds", label: "La photo montre exactement 7 pieds visibles." },
+      { id: "collective-doigts", label: "La photo montre exactement 18 doigts visibles et 7 pieds avec tout le monde qui participe." },
     ],
   },
   {
@@ -155,7 +154,7 @@ const missionCards = [
     title: "Mission lac",
     items: [
       { id: "lac-objet", label: "Un bouchon rouge usé (ou objet rouge similaire) a été retrouvé." },
-      { id: "lac-photo", label: "L’objet retrouvé a été pris en photo." },
+      { id: "lac-photo", label: "L’objet mystère a été pris en photo. (Étape 8)" },
     ],
   },
 ];
@@ -326,7 +325,7 @@ function loadQuestion(index) {
   elInstructions.textContent = instructionsText;
   elInstructions.style.display = instructionsText ? "block" : "none";
   elInstructions.classList.toggle("instructions-highlight", q.section === "Épreuve feuilles");
-  elQuestionText.textContent = q.question;
+  elQuestionText.innerHTML = q.question;
   configureQuestionImage(q);
 
   configureHint(q);
@@ -347,7 +346,11 @@ function renderQuestionInput(q) {
   if (elMolkkyObjectivesList) elMolkkyObjectivesList.innerHTML = "";
   if (elMatchRows) elMatchRows.innerHTML = "";
   elAckForm.style.display = "none";
-  elAckSubmit.textContent = "OK";
+  if (q.directResult === true) {
+    elAckSubmit.textContent = "Voir le score final";
+  } else {
+    elAckSubmit.textContent = "OK";
+  }
 
   if (q.kind === "molkky-start") {
     elMcqOptions.style.display = "none";
@@ -561,6 +564,7 @@ function submitMatchAnswer() {
       addedPoints,
       answerDisplay: `${correctMatches} bonne(s) liaison(s) sur ${q.pairs.length}.`,
       customTitle: "Liaisons enregistrées",
+      perfectMatch: correctMatches === q.pairs.length
     },
     q
   );
@@ -582,7 +586,6 @@ function updateSliderValueLabel(value, unit) {
 }
 
 if (elMatchSubmit) elMatchSubmit.addEventListener("click", submitMatchAnswer);
-if (elMolkkySubmit) elMolkkySubmit.addEventListener("click", submitMolkkyAnswer);
 if (elRangeInput) {
   elRangeInput.addEventListener("input", () => {
     if (!currentQuestion || currentQuestion.kind !== "range-slider") return;
@@ -606,12 +609,15 @@ function submitAcknowledgement() {
     const instructionsText = getInstructionsText(q);
     elInstructions.textContent = instructionsText;
     elInstructions.style.display = instructionsText ? "block" : "none";
-    elQuestionText.textContent = q.question;
+    elQuestionText.innerHTML = q.question;
     configureTimer(getQuestionTimer(q));
     return;
   }
   if (q.kind !== "acknowledgement") return;
-
+  if (q.directResult) {
+    showResultScreen();
+    return;
+  }
   answered = true;
   stopTimer();
   showAnswerScreen(
@@ -625,32 +631,6 @@ function submitAcknowledgement() {
   );
 }
 
-function submitMolkkyAnswer() {
-  if (answered) return;
-  const q = currentQuestion;
-  if (q.kind !== "molkky-start") return;
-
-  const reachedScore = Number.parseInt(elMolkkyScoreInput.value, 10);
-  if (!Number.isFinite(reachedScore) || reachedScore < 0) return;
-
-  const selectedObjectives = Array.from(elMolkkyObjectivesList.querySelectorAll("input:checked"));
-  const bonusPoints = selectedObjectives.reduce((total, input) => total + Number.parseInt(input.value, 10), 0);
-  const exactBonus = reachedScore === q.targetScore ? q.points ?? 0 : 0;
-
-  answered = true;
-  showAnswerScreen(
-    {
-      correct: true,
-      addedPoints: exactBonus + bonusPoints,
-      answerDisplay:
-        reachedScore === q.targetScore
-          ? `Score atteint : ${reachedScore}/50. Les objectifs annexes cochés ont bien été enregistrés.`
-          : `Score atteint : ${reachedScore}. Les 1000 points du défi principal ne sont accordés que pour un score exact de 50.`,
-      customTitle: "Mölkky enregistré",
-    },
-    q
-  );
-}
 
 function configureHint(q) {
   if (!q.hint) {
@@ -1006,22 +986,27 @@ function showAnswerScreen(result, q) {
     elAnswerIcon.className = "answer-icon correct";
     elAnswerTitle.textContent = result.customTitle || getAnswerTitle(q, result);
     elAnswerPoints.textContent = formatPoints(addedPoints);
-    elAnswerPoints.className = `points-badge ${addedPoints === 0 ? "" : addedPoints > 0 ? "gain" : "loss"}`.trim();
-    elAnswerPoints.style.display = shouldShowPointsBadge(q, addedPoints) ? "inline-block" : "none";
+    elAnswerPoints.className = `points-badge ${addedPoints > 0 ? "gain" : addedPoints < 0 ? "loss" : ""}`.trim();
+    elAnswerPoints.style.display = addedPoints === 0 ? "none" : "inline-block";
     const bubbleText = getAnswerBubbleText(q, result);
     setAnswerExactContent(bubbleText, q, Boolean(bubbleText));
-    if (q.easterEgg?.text) {
+    if (q.easterEgg?.text && (result.perfectMatch ?? true)) {
       elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.text}`;
       elAnswerEasterEgg.style.display = "block";
     }
-    if (q.easterEgg?.teaseText) {
-      elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.teaseText}`;
+    if (q.easterEgg?.teaseText && (result.perfectMatch ?? true)) {
+      elAnswerEasterEgg.textContent =
+        `${q.easterEgg.icon || "✨"} ${q.easterEgg.teaseText}`;
       elAnswerEasterEgg.style.display = "block";
+
       const delayedText = q.easterEgg.finalText || "";
+
       if (delayedText) {
         const delay = Number(q.easterEgg.delayMs) || 1000;
+
         window.setTimeout(() => {
-          elAnswerEasterEgg.textContent = `${q.easterEgg.icon || "✨"} ${q.easterEgg.teaseText} ${delayedText}`.trim();
+          elAnswerEasterEgg.textContent =
+            `${q.easterEgg.icon || "✨"} ${q.easterEgg.teaseText} ${delayedText}`.trim();
         }, delay);
       }
     }
@@ -1045,8 +1030,8 @@ function showAnswerScreen(result, q) {
     elAnswerPoints.className = "points-badge";
     elAnswerPoints.style.display = shouldShowPointsBadge(q, 0) ? "inline-block" : "none";
     elAnswerPoints.style.display = addedPoints === 0
-  ? "none"
-  : "inline-block";
+      ? "none"
+      : "inline-block";
     const bubbleText = getAnswerBubbleText(q, result);
     if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
       setAnswerExactContent(bubbleText, q, true);
@@ -1058,6 +1043,8 @@ function showAnswerScreen(result, q) {
 
   const isLast = currentIndex >= QUESTIONS.length - 1;
   const isStageTransition = result.correct && Boolean(q.nextBlock) && !isLast;
+  console.log(isLast, QUESTIONS.length);
+
   elNextBtn.textContent =
     !result.correct &&
       q.section?.toLowerCase().includes("signe distinctif")
@@ -1067,15 +1054,44 @@ function showAnswerScreen(result, q) {
         : isStageTransition
           ? "Étape suivante →"
           : "Question suivante →";
+
   elNextBtn.classList.toggle("btn-stage-next", isStageTransition);
 
+  // Auto-skip uniquement pour les réponses simples
   if (shouldAutoAdvance(q, result)) {
     autoAdvanceTimeout = window.setTimeout(() => {
       elNextBtn.click();
     }, ANSWER_AUTO_SKIP_DELAY);
   }
+
+  return false;
+}
+function hasDetailedAnswer(q, result) {
+  if (q.section === "Vrai/Faux") return true;
+
+  // Easter eggs ou révélations => on laisse le temps de lire
+  if (q.easterEgg?.text) return true;
+  if (q.easterEgg?.teaseText) return true;
+  if (q.bonusReveal?.first) return true;
+  if (
+    q.nextBlock?.title ||
+    q.nextBlock?.value ||
+    q.nextBlock?.label
+  ) {
+    return true;
+  }
+  return false;
 }
 
+function shouldAutoAdvance(q, result) {
+  const isLastQuestion = currentIndex >= QUESTIONS.length - 1;
+
+  if (isLastQuestion) {
+    return false;
+  }
+
+  return !hasDetailedAnswer(q, result);
+}
 function renderNextBlock(block) {
   const resolvedBlock = getResolvedNextBlock(block, currentQuestion);
   if (!resolvedBlock) {
@@ -1172,11 +1188,6 @@ function isHenryCorrectAnswer(q, value) {
   return isCorrectAnswer({ ...q, kind: "mcq" }, value);
 }
 
-function shouldAutoAdvance(q, result) {
-  const isLastAndCorrect = currentIndex >= QUESTIONS.length - 1 && Boolean(result.correct);
-  if (q?.section === "Vrai/Faux") return false;
-  return !isLastAndCorrect;
-}
 
 function clearAutoAdvance() {
   if (autoAdvanceTimeout) {
