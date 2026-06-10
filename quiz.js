@@ -28,7 +28,7 @@ function initSync(firebaseDatabase) {
   onValue(quizRef, (snapshot) => {
     const data = snapshot.val();
 
-    console.log("REMOTE UPDATE", data);
+    console.log("REMOTE UPDATE", Date.now(), snapshot.val());
     console.log(
       "LOCAL =", currentIndex, score,
       "REMOTE =", data?.currentIndex, data?.score
@@ -63,6 +63,8 @@ function initSync(firebaseDatabase) {
   console.log("Sync activée");
 }
 function syncState() {
+  console.log("SYNC", Date.now());
+
   console.log(
     "syncState()",
     "enabled=", syncEnabled,
@@ -1287,10 +1289,9 @@ function clearAutoAdvance() {
 }
 
 function advanceToNextQuestion() {
-  currentIndex += 1;
-  console.log("NEXT QUESTION ->", currentIndex);
+  currentIndex++;
 
-  if (syncEnabled) syncState();
+  syncState(); // tout de suite
 
   if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
