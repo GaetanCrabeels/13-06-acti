@@ -1,3 +1,55 @@
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, onValue } from "firebase/database";
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const firebaseConfig = {
+  apiKey: "AIzaSyBdCyzZpGL0lpHLJwVhZwa0Q4y9QFHFq58",
+  authDomain: "totemolle.firebaseapp.com",
+  databaseURL: "https://totemolle-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "totemolle",
+  storageBucket: "totemolle.firebasestorage.app",
+  messagingSenderId: "288994960428",
+  appId: "1:288994960428:web:bca3da82327a6084fadd89"
+};
+
+function initSync(firebaseDatabase) {
+  db = firebaseDatabase;
+  quizRef = ref(db, "quiz/state");
+
+  // écoute les changements globaux
+  onValue(quizRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    isRemoteUpdate = true;
+
+    if (data.currentIndex !== undefined && data.currentIndex !== currentIndex) {
+      currentIndex = data.currentIndex;
+      showScreen("question");
+      loadQuestion(currentIndex);
+    }
+
+    if (data.score !== undefined) {
+      score = data.score;
+      updateScoreUI();
+    }
+
+    isRemoteUpdate = false;
+  });
+
+  syncEnabled = true;
+}
+function syncState() {
+  if (!syncEnabled || !quizRef) return;
+  if (isRemoteUpdate) return;
+
+  set(quizRef, {
+    currentIndex,
+    score
+  });
+}
+let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
 let timerInterval = null;
@@ -980,6 +1032,9 @@ function showAnswerScreen(result, q) {
 
   if (result.correct) {
     score += addedPoints;
+    updateScoreUI();
+
+    if (syncEnabled) syncState();
     addGroupPoints(q, addedPoints);
     updateScoreUI();
     elAnswerIcon.textContent = "✅";
@@ -1198,10 +1253,14 @@ function clearAutoAdvance() {
 
 function advanceToNextQuestion() {
   currentIndex += 1;
+
+  if (syncEnabled) syncState();
+
   if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
     return;
   }
+
   showScreen("question");
   loadQuestion(currentIndex);
 }
