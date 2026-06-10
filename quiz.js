@@ -16,9 +16,9 @@ let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
 
-let db = getDatabase(app);
 
 const app = initializeApp(firebaseConfig);
+let db = getDatabase(app);
 
 window.addEventListener("load", () => {
   initSync(db);
