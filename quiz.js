@@ -11,6 +11,7 @@ const firebaseConfig = {
   messagingSenderId: "288994960428",
   appId: "1:288994960428:web:bca3da82327a6084fadd89"
 };
+let currentScreen = "start";
 
 
 // 1. init Firebase
@@ -19,7 +20,6 @@ const app = initializeApp(firebaseConfig);
 // 2. init Database
 let db = getDatabase(app);
 initSync(db);
-let currentScreen = "start";
 let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
