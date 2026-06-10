@@ -27,6 +27,7 @@ let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
 let currentAnswerCorrect = false;
+let currentLastResult = null;
 let currentQuestion = null;
 let currentOptions = [];
 let currentMatchSelection = null;
@@ -192,38 +193,55 @@ function initSync(firebaseDatabase) {
     const data = snapshot.val();
     if (!data) return;
 
-    // Ignore la première synchronisation (initialisation)
-    if (!firebaseReady) {
-      firebaseReady = true;
-      return;
-    }
+    // Premier snapshot : marquer Firebase comme prêt.
+    // Si le quiz est sur "start", rien à rejouer.
+    const isFirst = !firebaseReady;
+    firebaseReady = true;
+    if (isFirst && data.screen === "start") return;
 
     isRemoteUpdate = true;
-
-    // 1. SCORE
-    if (data.score !== undefined) {
-      score = data.score;
-      updateScoreUI();
-    }
-
-    // 2. INDEX (juste update variable)
-    if (data.currentIndex !== undefined) {
-      currentIndex = data.currentIndex;
-    }
-
-    // 3. SCREEN (juste update variable)
-    if (data.screen) {
-      currentScreen = data.screen;
-    }
-
+    score          = data.score         ?? score;
+    currentIndex   = data.currentIndex  ?? currentIndex;
+    currentScreen  = data.screen        ?? currentScreen;
+    answered       = data.answered      ?? false;
+    currentAnswerCorrect = data.answerCorrect ?? false;
     isRemoteUpdate = false;
 
-    // Rendu centralisé : rejouer l'état reçu
-    showScreen(currentScreen);
-    if (currentScreen === "question") loadQuestion(currentIndex);
+    applyRemoteState(data);
   });
 
   syncEnabled = true;
+}
+
+function applyRemoteState(data) {
+  switch (currentScreen) {
+    case "start":
+      showScreen("start");
+      break;
+
+    case "question":
+      showScreen("question");
+      loadQuestion(currentIndex);
+      break;
+
+    case "answer": {
+      const q = QUESTIONS[currentIndex];
+      const result = data.lastResult;
+      if (!q || !result) {
+        // Impossible de reconstruire – fallback sur la question
+        showScreen("question");
+        loadQuestion(currentIndex);
+        break;
+      }
+      updateScoreUI();
+      renderAnswerScreen(result, q);
+      break;
+    }
+
+    case "result":
+      showResultScreen();
+      break;
+  }
 }
 function syncState() {
   if (!syncEnabled || !quizRef) return;
@@ -232,7 +250,10 @@ function syncState() {
   set(quizRef, {
     currentIndex,
     score,
-    screen: currentScreen
+    screen: currentScreen,
+    answered,
+    answerCorrect: currentAnswerCorrect,
+    lastResult: currentLastResult ?? null,
   });
 }
 
@@ -348,6 +369,7 @@ function startQuiz() {
   usedHints.clear();
   pointsByGroup.clear();
   completedMissions.clear();
+  currentLastResult = null;
 
   showScreen("question");
   loadQuestion(currentIndex);
@@ -395,6 +417,7 @@ function loadQuestion(index) {
   clearAutoAdvance();
   answered = false;
   currentAnswerCorrect = false;
+  currentLastResult = null;
   currentQuestion = QUESTIONS[index];
   currentOptions = getQuestionOptions(currentQuestion);
   currentMatchSelection = null;
@@ -1023,29 +1046,46 @@ function getGroupPoints(q) {
   return pointsByGroup.get(getQuestionGroupKey(q)) ?? 0;
 }
 
+// Appelé par le maître (calcule le score, synchronise, puis rend l’écran).
 function showAnswerScreen(result, q) {
-
   clearAutoAdvance();
   if (isHenryQuestion(q)) stopHenryTimer();
+
+  // Calcul du score local
+  let addedPoints = result.correct ? result.addedPoints ?? 0 : 0;
+  if (result.correct && q.henryFinal && !henryAwarded) {
+    addedPoints += henryRemaining;
+    henryAwarded = true;
+    stopHenryTimer();
+  }
+  if (result.correct) {
+    score += addedPoints;
+    addGroupPoints(q, addedPoints);
+  }
+
+  // Enrichir result avec le addedPoints final avant de le sauvegarder
+  const finalResult = { ...result, addedPoints };
+  currentLastResult = finalResult;
+  currentAnswerCorrect = result.correct;
+
+  updateScoreUI();
+  if (syncEnabled) syncState();
+
+  renderAnswerScreen(finalResult, q);
+}
+
+// Appelé par le distant (le score est déjà dans Firebase, on ne re-calcule pas).
+function renderAnswerScreen(result, q) {
   showScreen("answer");
 
   currentAnswerCorrect = result.correct;
   elAnswerEasterEgg.textContent = "";
   elAnswerEasterEgg.style.display = "none";
 
-  let addedPoints = result.correct ? result.addedPoints ?? 0 : 0;
-  // La récompense Henry est gérée dans handleHenryAnswer ; on ne la réattribue pas ici.
-  if (result.correct && q.henryFinal && !henryAwarded) {
-    addedPoints += henryRemaining;
-    henryAwarded = true;
-    stopHenryTimer();
-  }
+  const addedPoints = result.addedPoints ?? 0;
 
   if (result.correct) {
-    score += addedPoints;
     updateScoreUI();
-    addGroupPoints(q, addedPoints);
-    if (syncEnabled) syncState();
 
     elAnswerIcon.textContent = "✅";
     elAnswerIcon.className = "answer-icon correct";
