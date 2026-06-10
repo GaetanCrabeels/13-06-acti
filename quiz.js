@@ -15,7 +15,6 @@ let currentScreen = "start";
 let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
-let lastLoadedIndex = null;
 
 const app = initializeApp(firebaseConfig);
 let db = getDatabase(app);
@@ -49,7 +48,6 @@ const MATCH_PLACEHOLDER = "Choisissez une démographie";
 const ABSURD_VALUE_MULTIPLIER = 2;
 const POINTS_DECIMAL_PRECISION = 100;
 const START_QUESTION_INDEX = 0;
-const QUIZ_TOTAL = QUESTIONS.length;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
   const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
   return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
@@ -93,7 +91,6 @@ const elMcqOptions = document.getElementById("mcq-options");
 const elMolkkyForm = document.getElementById("molkky-form");
 const elMolkkyScoreInput = document.getElementById("molkky-score-input");
 const elMolkkyObjectivesList = document.getElementById("molkky-objectives-list");
-const elMolkkySubmit = document.getElementById("molkky-submit");
 const elMatchForm = document.getElementById("match-form");
 const elMatchRows = document.getElementById("match-rows");
 const elMatchSubmit = document.getElementById("match-submit");
@@ -187,12 +184,7 @@ const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
-function getQuizTotal() {
-  return QUESTIONS.length;
-}
 function initSync(firebaseDatabase) {
-  console.log("initSync appelé");
-
   db = firebaseDatabase;
   quizRef = ref(db, "quiz/state");
 
@@ -200,9 +192,7 @@ function initSync(firebaseDatabase) {
     const data = snapshot.val();
     if (!data) return;
 
-    console.log("REMOTE UPDATE", data);
-
-    // 🔒 ignore première sync
+    // Ignore la première synchronisation (initialisation)
     if (!firebaseReady) {
       firebaseReady = true;
       return;
@@ -228,22 +218,16 @@ function initSync(firebaseDatabase) {
 
     isRemoteUpdate = false;
 
-    // 👇 IMPORTANT : rendu centralisé
-    applyRemoteState();
+    // Rendu centralisé : rejouer l'état reçu
+    showScreen(currentScreen);
+    if (currentScreen === "question") loadQuestion(currentIndex);
   });
 
   syncEnabled = true;
-  console.log("Sync activée");
 }
 function syncState() {
   if (!syncEnabled || !quizRef) return;
   if (isRemoteUpdate) return;
-
-  console.log("SYNC", {
-    currentIndex,
-    score,
-    screen: currentScreen
-  });
 
   set(quizRef, {
     currentIndex,
@@ -365,17 +349,12 @@ function startQuiz() {
   pointsByGroup.clear();
   completedMissions.clear();
 
-  // 🚫 ne pas sync ici directement
-  // if (syncEnabled) syncState();
-
   showScreen("question");
   loadQuestion(currentIndex);
 
-  // ✅ sync après rendu stable + petit délai
+  // Sync après rendu stable
   setTimeout(() => {
-    if (syncEnabled) {
-      syncState();
-    }
+    if (syncEnabled) syncState();
   }, 50);
 }
 
@@ -388,8 +367,6 @@ function resetHenryStage() {
 }
 
 function showScreen(name) {
-  console.log("SHOW SCREEN", name);
-
   Object.values(screens).forEach((s) =>
     s.classList.remove("active")
   );
@@ -399,7 +376,6 @@ function showScreen(name) {
   currentScreen = name;
 
   if (syncEnabled && !isRemoteUpdate) {
-    console.log("SYNC SCREEN", name);
     syncState();
   }
 
@@ -407,7 +383,6 @@ function showScreen(name) {
 }
 
 function loadQuestion(index) {
-  console.log("LOAD QUESTION", currentIndex);
   if (index < START_QUESTION_INDEX) {
     currentIndex = START_QUESTION_INDEX;
     index = START_QUESTION_INDEX;
@@ -428,7 +403,7 @@ function loadQuestion(index) {
 
   const q = currentQuestion;
   elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
-  elQuestionTotal.textContent = getQuizTotal(); updateScoreUI();
+  elQuestionTotal.textContent = QUESTIONS.length; updateScoreUI();
   elStageLabel.innerHTML = getDisplayStageLabel(q);
   elSection.textContent = getDisplaySectionLabel(q);
   const instructionsText = getInstructionsText(q);
@@ -451,71 +426,56 @@ function loadQuestion(index) {
   updateObjectivesPanel();
 }
 
+function hideAllForms() {
+  elMcqOptions.style.display = "none";
+  elMatchForm.style.display = "none";
+  elMolkkyForm.style.display = "none";
+  elSliderForm.style.display = "none";
+  elFreeForm.style.display = "none";
+}
+
 function renderQuestionInput(q) {
   elMcqOptions.innerHTML = "";
   if (elMolkkyObjectivesList) elMolkkyObjectivesList.innerHTML = "";
   if (elMatchRows) elMatchRows.innerHTML = "";
   elAckForm.style.display = "none";
-  if (q.directResult === true) {
-    elAckSubmit.textContent = "Voir le score final";
-  } else {
-    elAckSubmit.textContent = "OK";
-  }
+  elAckSubmit.textContent = q.directResult === true ? "Voir le score final" : "OK";
 
   if (q.kind === "molkky-start") {
-    elMcqOptions.style.display = "none";
-    elMatchForm.style.display = "none";
-    elSliderForm.style.display = "none";
-    elFreeForm.style.display = "none";
+    hideAllForms();
     elMolkkyForm.style.display = "flex";
     renderMolkkyQuestion(q);
     return;
   }
 
   if (q.kind === "match-pairs") {
-    elMcqOptions.style.display = "none";
-    elMolkkyForm.style.display = "none";
-    elSliderForm.style.display = "none";
-    elFreeForm.style.display = "none";
+    hideAllForms();
     elMatchForm.style.display = "flex";
     renderMatchQuestion(q);
     return;
   }
 
   if (q.kind === "range-slider") {
-    elMcqOptions.style.display = "none";
-    elMatchForm.style.display = "none";
-    elMolkkyForm.style.display = "none";
-    elFreeForm.style.display = "none";
+    hideAllForms();
     elSliderForm.style.display = "flex";
     renderSliderQuestion(q);
     return;
   }
 
   if (q.kind === "acknowledgement") {
-    elMcqOptions.style.display = "none";
-    elMatchForm.style.display = "none";
-    elMolkkyForm.style.display = "none";
-    elSliderForm.style.display = "none";
-    elFreeForm.style.display = "none";
+    hideAllForms();
     elAckForm.style.display = "block";
     return;
   }
 
   if (q.type === "mcq" || q.kind === "henry") {
+    hideAllForms();
     elMcqOptions.style.display = "grid";
-    elMatchForm.style.display = "none";
-    elMolkkyForm.style.display = "none";
-    elSliderForm.style.display = "none";
-    elFreeForm.style.display = "none";
     renderMcqOptions(q);
     return;
   }
 
-  elMcqOptions.style.display = "none";
-  elMatchForm.style.display = "none";
-  elMolkkyForm.style.display = "none";
-  elSliderForm.style.display = "none";
+  hideAllForms();
   elFreeForm.style.display = "flex";
   elFreeInput.value = "";
   elFreeInput.focus();
@@ -555,13 +515,6 @@ function configureQuestionImage(q) {
   elQuestionImage.src = imageSource;
   elQuestionImage.alt = q.imageAlt || "Illustration de la question";
   elQuestionImage.style.display = "block";
-}
-function countryToFlag(code) {
-  return code
-    .toUpperCase()
-    .replace(/./g, c =>
-      String.fromCodePoint(127397 + c.charCodeAt())
-    );
 }
 function renderMcqOptions(q) {
   currentOptions.forEach((opt) => {
@@ -1070,10 +1023,6 @@ function getGroupPoints(q) {
   return pointsByGroup.get(getQuestionGroupKey(q)) ?? 0;
 }
 
-function shouldShowPointsBadge(q, addedPoints) {
-  return !(addedPoints === 0 && (q.section === "Signe distinctif" || q.kind === "acknowledgement"));
-}
-
 function showAnswerScreen(result, q) {
 
   clearAutoAdvance();
@@ -1085,6 +1034,7 @@ function showAnswerScreen(result, q) {
   elAnswerEasterEgg.style.display = "none";
 
   let addedPoints = result.correct ? result.addedPoints ?? 0 : 0;
+  // La récompense Henry est gérée dans handleHenryAnswer ; on ne la réattribue pas ici.
   if (result.correct && q.henryFinal && !henryAwarded) {
     addedPoints += henryRemaining;
     henryAwarded = true;
@@ -1094,11 +1044,6 @@ function showAnswerScreen(result, q) {
   if (result.correct) {
     score += addedPoints;
     updateScoreUI();
-    console.log(
-      "SAVE SCORE",
-      "currentIndex=", currentIndex,
-      "score=", score
-    );
     addGroupPoints(q, addedPoints);
     if (syncEnabled) syncState();
 
@@ -1148,10 +1093,7 @@ function showAnswerScreen(result, q) {
     elAnswerTitle.textContent = getAnswerTitle(q, result);
     elAnswerPoints.textContent = q.kind === "henry" ? `Henry : -${HENRY_WRONG_PENALTY} pts` : "+0 point";
     elAnswerPoints.className = "points-badge";
-    elAnswerPoints.style.display = shouldShowPointsBadge(q, 0) ? "inline-block" : "none";
-    elAnswerPoints.style.display = addedPoints === 0
-      ? "none"
-      : "inline-block";
+    elAnswerPoints.style.display = "none";
     const bubbleText = getAnswerBubbleText(q, result);
     if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
       setAnswerExactContent(bubbleText, q, true);
@@ -1166,8 +1108,8 @@ function showAnswerScreen(result, q) {
 
   elNextBtn.textContent =
     !result.correct &&
-      q.section?.toLowerCase().includes("signe distinctif") &&
-      q.section?.toLowerCase().includes("Énigme")
+      (q.section?.toLowerCase().includes("signe distinctif") ||
+       q.section === "Énigme")
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
@@ -1183,8 +1125,6 @@ function showAnswerScreen(result, q) {
       elNextBtn.click();
     }, ANSWER_AUTO_SKIP_DELAY);
   }
-
-  return false;
 }
 function hasDetailedAnswer(q, result) {
   if (q.section === "Vrai/Faux") return true;
@@ -1254,7 +1194,7 @@ function showResultScreen() {
   elFinalDetails.textContent = "Score obtenu pendant le quiz.";
 
   let medal = "🥉 Médaille de bronze";
-  let message = "Balade terminée : mission accomplie, même si quelques bonus ont filé.";
+  let message = "Bravo d’avoir terminé le quiz. Avec les missions supplémentaires et les bonus, la médaille d’or reste atteignable.";
   if (scoreRatio >= 0.8) {
     medal = "🥇 Médaille d’or";
     message = "Vous êtes des cracks… mais pourquoi s’arrêter là ?";
@@ -1262,11 +1202,7 @@ function showResultScreen() {
     medal = "🥈 Médaille d’argent";
     message = "Très belle médaille obtenue sur le quiz. Les missions supplémentaires et points bonus peuvent encore vous emmener vers l’or.";
   } else if (scoreRatio > 0.5) {
-    medal = "🥉 Médaille de bronze";
     message = "Médaille du quiz validée. Les missions supplémentaires et les bonus peuvent encore faire grimper votre médaille.";
-  } else {
-    medal = "🥉 Médaille de bronze";
-    message = "Bravo d’avoir terminé le quiz. Avec les missions supplémentaires et les bonus, la médaille d’or reste atteignable.";
   }
   elFinalMessage.textContent = `${medal} — ${message}`;
 }
@@ -1318,7 +1254,6 @@ function clearAutoAdvance() {
 
 function advanceToNextQuestion() {
   currentIndex++;
-
 
   if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
@@ -1406,8 +1341,6 @@ function setAnswerExactContent(text, q, asBubble) {
 }
 
 function formatAnswerBubbleHtml(text) {
-  console.log("TEXT BRUT :", JSON.stringify(text));
-
   const sections = text
     .split(/\n{2,}/u)
     .map((section) => section.trim())
@@ -1461,7 +1394,6 @@ function formatAnswerBubbleHtml(text) {
       return `<div class="answer-detail-block">${htmlGroups}</div>`;
     })
     .join("");
-  console.log("BLOCKS HTML :", blocks);
   return `<div class="answer-detail-wrap"><p class="answer-detail-intro">💡 Explication détaillée</p>${blocks}</div>`;
 }
 
@@ -1546,12 +1478,8 @@ function renderSignBriefing(q) {
   elHintImage.alt = "";
   elQuestionImage.style.display = "none";
   elAckSubmit.textContent = "OK, on est sur place";
+  hideAllForms();
   elAckForm.style.display = "block";
-  elMcqOptions.style.display = "none";
-  elMatchForm.style.display = "none";
-  elMolkkyForm.style.display = "none";
-  elSliderForm.style.display = "none";
-  elFreeForm.style.display = "none";
 }
 
 function getResolvedNextBlock(block, q) {
