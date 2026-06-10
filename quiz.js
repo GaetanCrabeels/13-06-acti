@@ -187,6 +187,9 @@ const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
+function getQuizTotal() {
+  return QUESTIONS.length;
+}
 function initSync(firebaseDatabase) {
   console.log("initSync appelé");
 
@@ -194,28 +197,38 @@ function initSync(firebaseDatabase) {
   quizRef = ref(db, "quiz/state");
 
   onValue(quizRef, (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
+    const data = snapshot.val();
+    if (!data) return;
 
-  isRemoteUpdate = true;
+    console.log("REMOTE UPDATE", data);
 
-  if (data.screen && data.screen !== currentScreen) {
-    currentScreen = data.screen;
-    showScreen(currentScreen);
-  }
+    isRemoteUpdate = true;
 
-  if (data.currentIndex !== undefined && data.currentIndex !== currentIndex) {
-    currentIndex = data.currentIndex;
-    loadQuestion(currentIndex);
-  }
+    // Score
+    if (data.score !== undefined) {
+      score = data.score;
+      updateScoreUI();
+    }
 
-  if (data.score !== undefined) {
-    score = data.score;
-    updateScoreUI();
-  }
+    // Question
+    if (
+      data.currentIndex !== undefined &&
+      data.currentIndex !== currentIndex
+    ) {
+      currentIndex = data.currentIndex;
+      loadQuestion(currentIndex);
+    }
 
-  isRemoteUpdate = false;
-});
+    // Écran
+    if (
+      data.screen &&
+      data.screen !== currentScreen
+    ) {
+      showScreen(data.screen);
+    }
+
+    isRemoteUpdate = false;
+  });
 
   syncEnabled = true;
 
@@ -362,12 +375,18 @@ function resetHenryStage() {
 }
 
 function showScreen(name) {
-  Object.values(screens).forEach((s) => s.classList.remove("active"));
+  console.log("SHOW SCREEN", name);
+
+  Object.values(screens).forEach((s) =>
+    s.classList.remove("active")
+  );
+
   screens[name].classList.add("active");
 
   currentScreen = name;
 
   if (syncEnabled && !isRemoteUpdate) {
+    console.log("SYNC SCREEN", name);
     syncState();
   }
 
@@ -396,8 +415,7 @@ function loadQuestion(index) {
 
   const q = currentQuestion;
   elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
-  elQuestionTotal.textContent = QUIZ_TOTAL;
-  updateScoreUI();
+  elQuestionTotal.textContent = getQuizTotal(); updateScoreUI();
   elStageLabel.innerHTML = getDisplayStageLabel(q);
   elSection.textContent = getDisplaySectionLabel(q);
   const instructionsText = getInstructionsText(q);
@@ -1044,11 +1062,11 @@ function shouldShowPointsBadge(q, addedPoints) {
 }
 
 function showAnswerScreen(result, q) {
-  if (syncEnabled) syncState();
 
   clearAutoAdvance();
   if (isHenryQuestion(q)) stopHenryTimer();
   showScreen("answer");
+
   currentAnswerCorrect = result.correct;
   elAnswerEasterEgg.textContent = "";
   elAnswerEasterEgg.style.display = "none";
@@ -1069,7 +1087,8 @@ function showAnswerScreen(result, q) {
       "score=", score
     );
     addGroupPoints(q, addedPoints);
-    updateScoreUI();
+    if (syncEnabled) syncState();
+
     elAnswerIcon.textContent = "✅";
     elAnswerIcon.className = "answer-icon correct";
     elAnswerTitle.textContent = result.customTitle || getAnswerTitle(q, result);
@@ -1287,7 +1306,6 @@ function clearAutoAdvance() {
 function advanceToNextQuestion() {
   currentIndex++;
 
-  syncState(); // tout de suite
 
   if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
@@ -1296,6 +1314,8 @@ function advanceToNextQuestion() {
 
   showScreen("question");
   loadQuestion(currentIndex);
+  syncState(); // tout de suite
+
 }
 
 function looksLikeCoordinates(value) {
