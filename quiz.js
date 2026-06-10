@@ -1044,6 +1044,9 @@ function showAnswerScreen(result, q) {
     elAnswerPoints.textContent = q.kind === "henry" ? `Henry : -${HENRY_WRONG_PENALTY} pts` : "+0 point";
     elAnswerPoints.className = "points-badge";
     elAnswerPoints.style.display = shouldShowPointsBadge(q, 0) ? "inline-block" : "none";
+    elAnswerPoints.style.display = addedPoints === 0
+  ? "none"
+  : "inline-block";
     const bubbleText = getAnswerBubbleText(q, result);
     if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
       setAnswerExactContent(bubbleText, q, true);
@@ -1212,10 +1215,13 @@ function getDisplaySectionLabel(q) {
 
 function formatPoints(value) {
   const formattedValue =
-    Number.isInteger(value) ? String(value) : String(Number(value).toFixed(2)).replace(/\.?0+$/u, "");
+    Number.isInteger(value)
+      ? String(value)
+      : String(Number(value).toFixed(2)).replace(/\.?0+$/u, "");
+
   if (value > 0) return `+${formattedValue} points`;
   if (value < 0) return `${formattedValue} points`;
-  return "+0 points";
+  return "";
 }
 
 function shouldSkipRetryOnWrong(q) {
