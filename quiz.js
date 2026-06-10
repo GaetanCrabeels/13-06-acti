@@ -1103,7 +1103,6 @@ function showAnswerScreen(result, q) {
 
   const isLast = currentIndex >= QUESTIONS.length - 1;
   const isStageTransition = result.correct && Boolean(q.nextBlock) && !isLast;
-  console.log(isLast, QUESTIONS.length);
 
   elNextBtn.textContent =
     !result.correct &&
