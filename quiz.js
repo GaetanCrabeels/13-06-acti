@@ -1,17 +1,21 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue } from "firebase/database";
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 const firebaseConfig = {
-  apiKey: "AIzaSyBdCyzZpGL0lpHLJwVhZwa0Q4y9QFHFq58",
-  authDomain: "totemolle.firebaseapp.com",
-  databaseURL: "https://totemolle-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "totemolle",
-  storageBucket: "totemolle.firebasestorage.app",
-  messagingSenderId: "288994960428",
-  appId: "1:288994960428:web:bca3da82327a6084fadd89"
+  apiKey: "...",
+  authDomain: "...",
+  databaseURL: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
 };
+
+// 1. init Firebase
+const app = initializeApp(firebaseConfig);
+
+// 2. init Database
+const db = getDatabase(app);
 
 function initSync(firebaseDatabase) {
   db = firebaseDatabase;
