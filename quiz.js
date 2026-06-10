@@ -29,6 +29,10 @@ function initSync(firebaseDatabase) {
     const data = snapshot.val();
 
     console.log("REMOTE UPDATE", data);
+    console.log(
+      "LOCAL =", currentIndex, score,
+      "REMOTE =", data?.currentIndex, data?.score
+    );
 
     if (!data) return;
 
@@ -73,8 +77,8 @@ function syncState() {
     currentIndex,
     score
   })
-  .then(() => console.log("Firebase OK"))
-  .catch(err => console.error("Firebase ERROR", err));
+    .then(() => console.log("Firebase OK"))
+    .catch(err => console.error("Firebase ERROR", err));
 }
 let isRemoteUpdate = false;
 let currentIndex = 0;
@@ -376,6 +380,7 @@ function showScreen(name) {
 }
 
 function loadQuestion(index) {
+  console.log("LOAD QUESTION", currentIndex);
   if (index < START_QUESTION_INDEX) {
     currentIndex = START_QUESTION_INDEX;
     index = START_QUESTION_INDEX;
@@ -1060,7 +1065,11 @@ function showAnswerScreen(result, q) {
   if (result.correct) {
     score += addedPoints;
     updateScoreUI();
-
+    console.log(
+      "SAVE SCORE",
+      "currentIndex=", currentIndex,
+      "score=", score
+    );
     if (syncEnabled) syncState();
     addGroupPoints(q, addedPoints);
     updateScoreUI();
@@ -1279,6 +1288,7 @@ function clearAutoAdvance() {
 
 function advanceToNextQuestion() {
   currentIndex += 1;
+  console.log("NEXT QUESTION ->", currentIndex);
 
   if (syncEnabled) syncState();
 
