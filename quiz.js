@@ -923,6 +923,7 @@ function handleTimeout() {
 function handleHenryAnswer(result, q) {
   clearAutoAdvance();
   currentAnswerCorrect = result.correct;
+  if (syncEnabled) syncState();
 
   if (result.correct && q.henryFinal && !henryAwarded) {
     score += henryRemaining;
@@ -1050,6 +1051,8 @@ function shouldShowPointsBadge(q, addedPoints) {
 }
 
 function showAnswerScreen(result, q) {
+  if (syncEnabled) syncState();
+
   clearAutoAdvance();
   if (isHenryQuestion(q)) stopHenryTimer();
   showScreen("answer");
@@ -1072,7 +1075,6 @@ function showAnswerScreen(result, q) {
       "currentIndex=", currentIndex,
       "score=", score
     );
-    if (syncEnabled) syncState();
     addGroupPoints(q, addedPoints);
     updateScoreUI();
     elAnswerIcon.textContent = "✅";
