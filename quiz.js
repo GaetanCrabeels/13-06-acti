@@ -48,7 +48,7 @@ const ANSWER_AUTO_SKIP_DELAY = 600;
 const MATCH_PLACEHOLDER = "Choisissez une démographie";
 const ABSURD_VALUE_MULTIPLIER = 2;
 const POINTS_DECIMAL_PRECISION = 100;
-const START_QUESTION_INDEX = 0;
+const START_QUESTION_INDEX = 2;
 const QUIZ_TOTAL = QUESTIONS.length;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
   const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
