@@ -238,6 +238,12 @@ function syncState() {
   if (!syncEnabled || !quizRef) return;
   if (isRemoteUpdate) return;
 
+  console.log("SYNC", {
+    currentIndex,
+    score,
+    screen: currentScreen
+  });
+
   set(quizRef, {
     currentIndex,
     score,
