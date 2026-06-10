@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 // 2. init Database
 let db = getDatabase(app);
 initSync(db);
-
+let currentScreen = "start";
 let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
@@ -194,33 +194,25 @@ function initSync(firebaseDatabase) {
 
   onValue(quizRef, (snapshot) => {
     const data = snapshot.val();
-
-    console.log("REMOTE UPDATE", Date.now(), snapshot.val());
-    console.log(
-      "LOCAL =", currentIndex, score,
-      "REMOTE =", data?.currentIndex, data?.score
-    );
-
     if (!data) return;
 
     isRemoteUpdate = true;
 
-    if (
-      data.currentIndex !== undefined &&
-      data.currentIndex !== currentIndex
-    ) {
+    if (data.screen && data.screen !== currentScreen) {
+      showScreen(data.screen);
+    }
+
+    if (data.currentIndex !== undefined && data.currentIndex !== currentIndex) {
       currentIndex = data.currentIndex;
-      showScreen("question");
       loadQuestion(currentIndex);
     }
 
-    if (
-      data.score !== undefined &&
-      data.score !== score
-    ) {
+    if (data.score !== undefined) {
       score = data.score;
       updateScoreUI();
     }
+
+    currentScreen = data.screen || currentScreen;
 
     isRemoteUpdate = false;
   });
@@ -1142,7 +1134,7 @@ function showAnswerScreen(result, q) {
 
   elNextBtn.textContent =
     !result.correct &&
-      q.section?.toLowerCase().includes("signe distinctif")&&
+      q.section?.toLowerCase().includes("signe distinctif") &&
       q.section?.toLowerCase().includes("Énigme")
       ? "Réessayer →"
       : isLast
