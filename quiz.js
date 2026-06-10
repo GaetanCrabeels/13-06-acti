@@ -193,54 +193,79 @@ function initSync(firebaseDatabase) {
     const data = snapshot.val();
     if (!data) return;
 
-    // Premier snapshot : marquer Firebase comme prêt.
-    // Si le quiz est sur "start", rien à rejouer.
-    const isFirst = !firebaseReady;
-    firebaseReady = true;
-    if (isFirst && data.screen === "start") return;
+    if (!firebaseReady) {
+      firebaseReady = true;
+
+      // sync initial UNE SEULE FOIS
+      isRemoteUpdate = true;
+
+      score = data.score ?? 0;
+      currentIndex = data.currentIndex ?? 0;
+      currentScreen = data.screen ?? "start";
+
+      applyRemoteState(data);
+
+      isRemoteUpdate = false;
+      return;
+    }
+
+    // 👇 IMPORTANT : ne rien faire si update identique
+    if (
+      data.currentIndex === currentIndex &&
+      data.screen === currentScreen &&
+      data.score === score
+    ) return;
 
     isRemoteUpdate = true;
-    score          = data.score         ?? score;
-    currentIndex   = data.currentIndex  ?? currentIndex;
-    currentScreen  = data.screen        ?? currentScreen;
-    answered       = data.answered      ?? false;
-    currentAnswerCorrect = data.answerCorrect ?? false;
-    isRemoteUpdate = false;
+
+    score = data.score ?? score;
+    currentIndex = data.currentIndex ?? currentIndex;
+    currentScreen = data.screen ?? currentScreen;
 
     applyRemoteState(data);
+
+    isRemoteUpdate = false;
   });
 
   syncEnabled = true;
 }
 
 function applyRemoteState(data) {
-  switch (currentScreen) {
-    case "start":
-      showScreen("start");
-      break;
+  if (!data) return;
 
-    case "question":
-      showScreen("question");
-      loadQuestion(currentIndex);
-      break;
+  isRemoteUpdate = true;
 
-    case "answer": {
-      const q = QUESTIONS[currentIndex];
-      const result = data.lastResult;
-      if (!q || !result) {
-        // Impossible de reconstruire – fallback sur la question
+  try {
+    if (data.score !== undefined) score = data.score;
+    if (data.currentIndex !== undefined) currentIndex = data.currentIndex;
+    if (data.answered !== undefined) answered = data.answered;
+    if (data.answerCorrect !== undefined) currentAnswerCorrect = data.answerCorrect;
+
+    const screen = data.screen ?? currentScreen;
+
+    switch (screen) {
+      case "start":
+        showScreen("start");
+        break;
+
+      case "question":
         showScreen("question");
         loadQuestion(currentIndex);
         break;
-      }
-      updateScoreUI();
-      renderAnswerScreen(result, q);
-      break;
-    }
 
-    case "result":
-      showResultScreen();
-      break;
+      case "answer":
+        if (data.lastResult && QUESTIONS[currentIndex]) {
+          showScreen("answer");
+          renderAnswerScreen(data.lastResult, QUESTIONS[currentIndex]);
+        }
+        break;
+
+      case "result":
+        showResultScreen();
+        break;
+    }
+  } finally {
+    isRemoteUpdate = false;
   }
 }
 function syncState() {
@@ -374,10 +399,10 @@ function startQuiz() {
   showScreen("question");
   loadQuestion(currentIndex);
 
-  // Sync après rendu stable
+  // sync différé (important pour éviter race Firebase)
   setTimeout(() => {
     if (syncEnabled) syncState();
-  }, 50);
+  }, 100);
 }
 
 function resetHenryStage() {
@@ -397,14 +422,11 @@ function showScreen(name) {
 
   currentScreen = name;
 
-  if (syncEnabled && !isRemoteUpdate) {
-    syncState();
-  }
-
   updateObjectivesPanel();
 }
 
 function loadQuestion(index) {
+  if (index === currentIndex && currentQuestion) return;
   if (index < START_QUESTION_INDEX) {
     currentIndex = START_QUESTION_INDEX;
     index = START_QUESTION_INDEX;
@@ -923,7 +945,6 @@ function handleTimeout() {
 function handleHenryAnswer(result, q) {
   clearAutoAdvance();
   currentAnswerCorrect = result.correct;
-  if (syncEnabled) syncState();
 
   if (result.correct && q.henryFinal && !henryAwarded) {
     score += henryRemaining;
@@ -1149,7 +1170,7 @@ function renderAnswerScreen(result, q) {
   elNextBtn.textContent =
     !result.correct &&
       (q.section?.toLowerCase().includes("signe distinctif") ||
-       q.section === "Énigme")
+        q.section === "Énigme")
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
