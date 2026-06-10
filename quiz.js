@@ -18,24 +18,35 @@ const app = initializeApp(firebaseConfig);
 
 // 2. init Database
 let db = getDatabase(app);
+initSync(db);
 function initSync(firebaseDatabase) {
+  console.log("initSync appelé");
+
   db = firebaseDatabase;
   quizRef = ref(db, "quiz/state");
 
-  // écoute les changements globaux
   onValue(quizRef, (snapshot) => {
     const data = snapshot.val();
+
+    console.log("REMOTE UPDATE", data);
+
     if (!data) return;
 
     isRemoteUpdate = true;
 
-    if (data.currentIndex !== undefined && data.currentIndex !== currentIndex) {
+    if (
+      data.currentIndex !== undefined &&
+      data.currentIndex !== currentIndex
+    ) {
       currentIndex = data.currentIndex;
       showScreen("question");
       loadQuestion(currentIndex);
     }
 
-    if (data.score !== undefined) {
+    if (
+      data.score !== undefined &&
+      data.score !== score
+    ) {
       score = data.score;
       updateScoreUI();
     }
@@ -44,15 +55,26 @@ function initSync(firebaseDatabase) {
   });
 
   syncEnabled = true;
+
+  console.log("Sync activée");
 }
 function syncState() {
+  console.log(
+    "syncState()",
+    "enabled=", syncEnabled,
+    "quizRef=", !!quizRef,
+    "remote=", isRemoteUpdate
+  );
+
   if (!syncEnabled || !quizRef) return;
   if (isRemoteUpdate) return;
 
   set(quizRef, {
     currentIndex,
     score
-  });
+  })
+  .then(() => console.log("Firebase OK"))
+  .catch(err => console.error("Firebase ERROR", err));
 }
 let isRemoteUpdate = false;
 let currentIndex = 0;
@@ -323,18 +345,18 @@ function updateMissionProgress() {
 function startQuiz() {
   currentIndex = START_QUESTION_INDEX;
   score = 0;
+
   answered = false;
   currentAnswerCorrect = false;
+
   usedHints.clear();
   pointsByGroup.clear();
   completedMissions.clear();
-  if (elMissionsContent) {
-    Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
-      checkbox.checked = false;
-    });
+
+  if (syncEnabled) {
+    syncState();
   }
-  updateMissionProgress();
-  resetHenryStage();
+
   showScreen("question");
   loadQuestion(currentIndex);
 }
