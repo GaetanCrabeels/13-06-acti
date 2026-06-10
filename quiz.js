@@ -378,6 +378,13 @@ function resetHenryStage() {
 function showScreen(name) {
   Object.values(screens).forEach((s) => s.classList.remove("active"));
   screens[name].classList.add("active");
+
+  currentScreen = name;
+
+  if (syncEnabled && !isRemoteUpdate) {
+    syncState();
+  }
+
   updateObjectivesPanel();
 }
 
