@@ -12,17 +12,18 @@ const firebaseConfig = {
   appId: "1:288994960428:web:bca3da82327a6084fadd89"
 };
 let currentScreen = "start";
-
-
-// 1. init Firebase
-const app = initializeApp(firebaseConfig);
-
-// 2. init Database
-let db = getDatabase(app);
-initSync(db);
 let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
+
+let db = getDatabase(app);
+
+const app = initializeApp(firebaseConfig);
+
+window.addEventListener("load", () => {
+  initSync(db);
+});
+
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
@@ -193,29 +194,28 @@ function initSync(firebaseDatabase) {
   quizRef = ref(db, "quiz/state");
 
   onValue(quizRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+  const data = snapshot.val();
+  if (!data) return;
 
-    isRemoteUpdate = true;
+  isRemoteUpdate = true;
 
-    if (data.screen && data.screen !== currentScreen) {
-      showScreen(data.screen);
-    }
+  if (data.screen && data.screen !== currentScreen) {
+    currentScreen = data.screen;
+    showScreen(currentScreen);
+  }
 
-    if (data.currentIndex !== undefined && data.currentIndex !== currentIndex) {
-      currentIndex = data.currentIndex;
-      loadQuestion(currentIndex);
-    }
+  if (data.currentIndex !== undefined && data.currentIndex !== currentIndex) {
+    currentIndex = data.currentIndex;
+    loadQuestion(currentIndex);
+  }
 
-    if (data.score !== undefined) {
-      score = data.score;
-      updateScoreUI();
-    }
+  if (data.score !== undefined) {
+    score = data.score;
+    updateScoreUI();
+  }
 
-    currentScreen = data.screen || currentScreen;
-
-    isRemoteUpdate = false;
-  });
+  isRemoteUpdate = false;
+});
 
   syncEnabled = true;
 
