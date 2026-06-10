@@ -248,8 +248,8 @@ const QUESTIONS = [
     section: "Questions Henryesque",
     kind: "henry",
     question: "Quel est le pays le plus lointain où il s’est rendu en voiture ?",
-    options: ["Malte", "Turquie", "Iran"],
-    answer: "Iran",
+    options: ["Malte", "Turquie", "Afghanistan"],
+    answer: "Afghanistan",
     points: 0,
   },
   {
