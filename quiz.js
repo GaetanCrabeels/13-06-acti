@@ -15,7 +15,7 @@ let currentScreen = "start";
 let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
-
+let lastLoadedIndex = null;
 
 const app = initializeApp(firebaseConfig);
 let db = getDatabase(app);
@@ -23,7 +23,7 @@ let db = getDatabase(app);
 window.addEventListener("load", () => {
   initSync(db);
 });
-
+let firebaseReady = false;
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
@@ -202,36 +202,37 @@ function initSync(firebaseDatabase) {
 
     console.log("REMOTE UPDATE", data);
 
+    // 🔒 ignore première sync
+    if (!firebaseReady) {
+      firebaseReady = true;
+      return;
+    }
+
     isRemoteUpdate = true;
 
-    // Score
+    // 1. SCORE
     if (data.score !== undefined) {
       score = data.score;
       updateScoreUI();
     }
 
-    // Question
-    if (
-      data.currentIndex !== undefined &&
-      data.currentIndex !== currentIndex
-    ) {
+    // 2. INDEX (juste update variable)
+    if (data.currentIndex !== undefined) {
       currentIndex = data.currentIndex;
-      loadQuestion(currentIndex);
     }
 
-    // Écran
-    if (
-      data.screen &&
-      data.screen !== currentScreen
-    ) {
-      showScreen(data.screen);
+    // 3. SCREEN (juste update variable)
+    if (data.screen) {
+      currentScreen = data.screen;
     }
 
     isRemoteUpdate = false;
+
+    // 👇 IMPORTANT : rendu centralisé
+    applyRemoteState();
   });
 
   syncEnabled = true;
-
   console.log("Sync activée");
 }
 function syncState() {
@@ -364,12 +365,18 @@ function startQuiz() {
   pointsByGroup.clear();
   completedMissions.clear();
 
-  if (syncEnabled) {
-    syncState();
-  }
+  // 🚫 ne pas sync ici directement
+  // if (syncEnabled) syncState();
 
   showScreen("question");
   loadQuestion(currentIndex);
+
+  // ✅ sync après rendu stable + petit délai
+  setTimeout(() => {
+    if (syncEnabled) {
+      syncState();
+    }
+  }, 50);
 }
 
 function resetHenryStage() {
