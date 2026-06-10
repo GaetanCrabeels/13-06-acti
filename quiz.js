@@ -16,8 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // 2. init Database
-const db = getDatabase(app);
-
+let db = getDatabase(app);
 function initSync(firebaseDatabase) {
   db = firebaseDatabase;
   quizRef = ref(db, "quiz/state");
