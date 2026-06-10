@@ -1141,7 +1141,8 @@ function showAnswerScreen(result, q) {
 
   elNextBtn.textContent =
     !result.correct &&
-      q.section?.toLowerCase().includes("signe distinctif")
+      q.section?.toLowerCase().includes("signe distinctif")&&
+      q.section?.toLowerCase().includes("Énigme")
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
