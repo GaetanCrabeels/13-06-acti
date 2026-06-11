@@ -1534,6 +1534,10 @@ function getWrongAnswerText(q, result) {
 }
 
 function shouldShowSignBriefing(q) {
+  console.log("SHOW BRIEFING", {
+    questionId: q.id,
+    alreadySeen: seenSignBriefings.has(q.id)
+  });
   return q.section?.toLowerCase().includes("signe distinctif") && !seenSignBriefings.has(q.id);
 }
 
