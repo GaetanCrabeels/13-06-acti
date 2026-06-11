@@ -24,7 +24,13 @@ const sessionRef = ref(db, `sessions/${SESSION_ID}`);
 async function syncState() {
 
   if (syncingRemote) return;
-
+  console.log("SYNC", {
+  currentIndex,
+  screen:
+    document
+      .querySelector(".screen.active")
+      ?.id
+});
   await update(sessionRef, {
 
     currentIndex,
@@ -39,13 +45,21 @@ async function syncState() {
         .querySelector(".screen.active")
         ?.id || "",
 
-    completedMissions:[...completedMissions],
+    completedMissions: [...completedMissions],
+
+    lastAnswerResult,
+    lastAnswerQuestionId,
 
     timestamp: Date.now()
   });
+  console.log(
+    "SCREEN ENVOYE",
+    document.querySelector(".screen.active")?.id
+  );
 }
-let currentIndex = 0 ;
-
+let currentIndex = 0;
+let lastAnswerResult = null;
+let lastAnswerQuestionId = null;
 let syncingRemote = false;
 let score = 0;
 let timerInterval = null;
@@ -310,8 +324,8 @@ function updateMissionProgress() {
     elMissionsProgressBar.style.width = `${Math.round(ratio * 100)}%`;
   }
   if (!syncingRemote) {
-  syncState();
-}
+    syncState();
+  }
 }
 
 function startQuiz() {
@@ -343,6 +357,8 @@ function resetHenryStage() {
 }
 
 function showScreen(name) {
+  console.log("SHOW", name);
+
   Object.values(screens).forEach((s) => s.classList.remove("active"));
   screens[name].classList.add("active");
   updateObjectivesPanel();
@@ -724,7 +740,10 @@ elHintBtn.addEventListener("click", () => {
   const q = QUESTIONS[currentIndex];
   if (!q.hint || usedHints.has(q.id)) return;
   usedHints.add(q.id);
-  score += q.hint.penalty ?? 0;
+  if (!remote) {
+    score += q.hint.penalty ?? 0;
+  }
+
   updateScoreUI();
   elHintText.classList.add("visible");
   if (q.hint.image) elHintMedia.classList.add("visible");
@@ -890,7 +909,7 @@ function handleHenryAnswer(result, q) {
   clearAutoAdvance();
   currentAnswerCorrect = result.correct;
 
-  if (result.correct && q.henryFinal && !henryAwarded) {
+  if (result.correct && q.henryFinal && !henryAwarded && !remote) {
     score += henryRemaining;
     henryAwarded = true;
     updateScoreUI();
@@ -1015,8 +1034,10 @@ function shouldShowPointsBadge(q, addedPoints) {
   return !(addedPoints === 0 && (q.section === "Signe distinctif" || q.kind === "acknowledgement"));
 }
 
-function showAnswerScreen(result, q) {
+function showAnswerScreen(result, q, remote = false) {
   clearAutoAdvance();
+  lastAnswerResult = structuredClone(result);
+  lastAnswerQuestionId = q.id;
   if (isHenryQuestion(q)) stopHenryTimer();
   showScreen("answer");
   currentAnswerCorrect = result.correct;
@@ -1024,14 +1045,16 @@ function showAnswerScreen(result, q) {
   elAnswerEasterEgg.style.display = "none";
 
   let addedPoints = result.correct ? result.addedPoints ?? 0 : 0;
-  if (result.correct && q.henryFinal && !henryAwarded) {
+  if (result.correct && q.henryFinal && !henryAwarded && !remote) {
     addedPoints += henryRemaining;
     henryAwarded = true;
     stopHenryTimer();
   }
 
   if (result.correct) {
-    score += addedPoints;
+    if (!remote) {
+      score += addedPoints;
+    }
     addGroupPoints(q, addedPoints);
     updateScoreUI();
     elAnswerIcon.textContent = "✅";
@@ -1575,8 +1598,10 @@ window.resetFirebaseQuiz = async () => {
 };
 onValue(sessionRef, (snapshot) => {
 
+
   const data = snapshot.val();
 
+  console.log("FIREBASE =", data);
   if (!data) return;
 
   syncingRemote = true;
@@ -1606,7 +1631,7 @@ onValue(sessionRef, (snapshot) => {
   }
 
   const screen = data.screen || "";
-
+  console.log("SCREEN FIREBASE =", screen);
   if (screen.includes("answer")) {
 
     showScreen("answer");
