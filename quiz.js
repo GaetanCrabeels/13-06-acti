@@ -1563,7 +1563,6 @@ function renderSignBriefing(q) {
   elMolkkyForm.style.display = "none";
   elSliderForm.style.display = "none";
   elFreeForm.style.display = "none";
-  signBriefingQuestionId = null;
 }
 
 function getResolvedNextBlock(block, q) {
