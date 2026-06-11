@@ -44,7 +44,7 @@ async function syncState() {
     document.querySelector(".screen.active")?.id
   );
 }
-let localCurrentIndex =-1;
+let lastLoadedIndex  =-1;
 let applyingRemoteState = false;
 let uiLock = false;
 let currentIndex = 0;
