@@ -224,7 +224,7 @@ function replaceFlags(text) {
     .replace(/🇪🇸/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/es.png" alt="Espagne">')
     .replace(/🇬🇧/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/gb.png" alt="Royaume-Uni">');
 }
-  function resetQuestionState() {
+function resetQuestionState() {
   answered = false;
   currentAnswerCorrect = false;
   signBriefingQuestionId = null;
@@ -897,6 +897,13 @@ elFreeForm.addEventListener("submit", (e) => {
 });
 
 function submitFreeAnswer() {
+  console.log("SUBMIT", {
+    syncingRemote,
+    applyingRemoteState,
+    answered,
+    currentIndex,
+    currentQuestion: currentQuestion?.id
+  });
   if (syncingRemote || applyingRemoteState) return;
   if (answered) return; const q = QUESTIONS[currentIndex];
   const value = elFreeInput.value.trim();
@@ -1204,11 +1211,12 @@ elNextBtn.addEventListener("click", () => {
       advanceToNextQuestion();
     } else {
       showScreen("question");
-      if (currentIndex !== lastLoadedIndex) {
-        loadQuestion(currentIndex);
-        lastLoadedIndex = currentIndex;
-        localCurrentIndex = currentIndex;
-      }
+
+      loadQuestion(currentIndex);
+
+      lastLoadedIndex = currentIndex;
+      localCurrentIndex = currentIndex;
+
       syncState();
     }
     return;
@@ -1549,6 +1557,7 @@ function renderSignBriefing(q) {
   elMolkkyForm.style.display = "none";
   elSliderForm.style.display = "none";
   elFreeForm.style.display = "none";
+  signBriefingQuestionId = null;
 }
 
 function getResolvedNextBlock(block, q) {
@@ -1679,13 +1688,13 @@ onValue(sessionRef, (snapshot) => {
         break;
 
       case "screen-question":
+
         showScreen("question");
-        if (currentIndex !== lastLoadedIndex) {
-          resetQuestionState();
-          loadQuestion(currentIndex);
-          lastLoadedIndex = currentIndex;
-          localCurrentIndex = currentIndex;
-        }
+        resetQuestionState();
+        loadQuestion(currentIndex);
+        lastLoadedIndex = currentIndex;
+        localCurrentIndex = currentIndex;
+
         break;
 
       case "screen-answer": {
