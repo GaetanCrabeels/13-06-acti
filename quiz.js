@@ -678,13 +678,14 @@ if (elRangeSubmit) elRangeSubmit.addEventListener("click", submitSliderAnswer);
 if (elAckSubmit) elAckSubmit.addEventListener("click", submitAcknowledgement);
 
 function submitAcknowledgement() {
-  console.log({
-  signBriefingQuestionId,
-  currentQuestionId: q?.id,
-  answered
-});
-  if (answered) return;
   const q = currentQuestion;
+
+  console.log({
+    signBriefingQuestionId,
+    currentQuestionId: q?.id,
+    answered
+  });
+  if (answered) return;
   if (signBriefingQuestionId != null && q?.id === signBriefingQuestionId) {
     signBriefingQuestionId = null;
     seenSignBriefings.add(q.id);
