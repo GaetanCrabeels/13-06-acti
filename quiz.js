@@ -1677,9 +1677,10 @@ onValue(sessionRef, (snapshot) => {
     lastLoadedIndex,
     screen
   });
-  const remoteIndex = data.currentIndex ?? 0;
   const q = QUESTIONS[remoteIndex];
   const data = snapshot.val();
+  const remoteIndex = data.currentIndex ?? 0;
+
   if (!data) {
     // No session yet: stay on start screen, initialise panels
     renderMissionsPanel();
