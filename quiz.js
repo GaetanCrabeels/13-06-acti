@@ -39,10 +39,11 @@ async function syncState() {
     screen: document.querySelector(".screen.active")?.id || "",
     timestamp: Date.now()
   });
-  console.log(
-    "SCREEN ENVOYE",
-    document.querySelector(".screen.active")?.id
-  );
+  console.log("SYNC", {
+  currentIndex,
+  screen: document.querySelector(".screen.active")?.id,
+  answered
+});
 }
 let lastLoadedIndex = -1;
 let localCurrentIndex = -1;
@@ -1327,19 +1328,23 @@ function publishAnswer(result, q, fromRemote = false) {
 function advanceToNextQuestion() {
   currentIndex += 1;
   resetQuestionState();
+
   if (currentIndex >= QUESTIONS.length) {
-    update(sessionRef, { screen: "screen-result", timestamp: Date.now() });
     showResultScreen();
+    syncState();
     return;
   }
 
   answered = false;
   currentAnswerCorrect = false;
-  syncState();
+
   showScreen("question");
   loadQuestion(currentIndex);
+
   localCurrentIndex = currentIndex;
   lastLoadedIndex = currentIndex;
+
+  syncState();
 }
 
 function looksLikeCoordinates(value) {
