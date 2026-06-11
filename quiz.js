@@ -1,5 +1,4 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-
 import {
   getDatabase,
   ref,
@@ -18,7 +17,6 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-let currentIndex = 0 ;
 
 const SESSION_ID = "quiz-live";
 
@@ -46,6 +44,8 @@ async function syncState() {
     timestamp: Date.now()
   });
 }
+let currentIndex = 0 ;
+
 let syncingRemote = false;
 let score = 0;
 let timerInterval = null;
