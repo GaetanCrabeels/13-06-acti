@@ -32,18 +32,21 @@ async function syncState() {
         ?.id
   });
   await update(sessionRef, {
-  currentIndex,
-  score,
-  henryRemaining,
-  completedMissions: [...completedMissions],
-  screen: document.querySelector(".screen.active")?.id || "",
-  timestamp: Date.now()
-});
+    currentIndex,
+    score,
+    henryRemaining,
+    completedMissions: [...completedMissions],
+    screen: document.querySelector(".screen.active")?.id || "",
+    timestamp: Date.now()
+  });
   console.log(
     "SCREEN ENVOYE",
     document.querySelector(".screen.active")?.id
   );
 }
+let localCurrentIndex =-1;
+let applyingRemoteState = false;
+let uiLock = false;
 let currentIndex = 0;
 let lastAnswerResult = null;
 let lastAnswerQuestionId = null;
@@ -290,31 +293,43 @@ function renderMissionsPanel() {
 
   Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
-      const missionItemId = checkbox.dataset.missionItemId;
-      if (!missionItemId) return;
-      if (checkbox.checked) completedMissions.add(missionItemId);
-      else completedMissions.delete(missionItemId);
-      updateMissionProgress();
-    });
+  const missionItemId = checkbox.dataset.missionItemId;
+  if (!missionItemId) return;
+
+  if (checkbox.checked) completedMissions.add(missionItemId);
+  else completedMissions.delete(missionItemId);
+
+  updateMissionProgress();
+
+  if (!syncingRemote) {
+    syncState();
+  }
+});
   });
   updateMissionProgress();
 }
 
 function updateMissionProgress() {
-  const total = missionCards.reduce((count, mission) => count + (mission.items?.length ?? 0), 0);
+  const total = missionCards.reduce(
+    (count, mission) => count + (mission.items?.length ?? 0),
+    0
+  );
+
   const done = completedMissions.size;
   const ratio = total === 0 ? 0 : done / total;
+
   if (elMissionsProgressText) {
     elMissionsProgressText.textContent = `${done} / ${total}`;
   }
+
   if (elMissionsProgressBar) {
     elMissionsProgressBar.style.width = `${Math.round(ratio * 100)}%`;
   }
-  if (!syncingRemote && data.uiLock) {
-    syncState();
-  }
 }
-
+function onMissionChange() {
+  if (syncingRemote) return;
+  syncState();
+}
 function startQuiz() {
   currentIndex = START_QUESTION_INDEX;
   score = 0;
@@ -331,6 +346,7 @@ function startQuiz() {
   showScreen("question");
   if (currentIndex !== localCurrentIndex) {
     loadQuestion(currentIndex);
+    localCurrentIndex = currentIndex;
   } syncState();
 }
 
@@ -1177,6 +1193,8 @@ elNextBtn.addEventListener("click", () => {
       showScreen("question");
       if (currentIndex !== localCurrentIndex) {
         loadQuestion(currentIndex);
+        localCurrentIndex = currentIndex;
+
       }
     }
     return;
@@ -1594,84 +1612,66 @@ window.resetFirebaseQuiz = async () => {
 
 };
 onValue(sessionRef, (snapshot) => {
-
-
   const data = snapshot.val();
-
-  console.log("FIREBASE =", data);
   if (!data) return;
 
   syncingRemote = true;
 
-  currentIndex = data.currentIndex ?? 0;
-  score = data.score ?? 0;
-  henryRemaining = data.henryRemaining ?? HENRY_STARTING_SCORE;
-  answered = data.answered ?? false;
-  currentAnswerCorrect = data.currentAnswerCorrect ?? false;
+  try {
+    currentIndex = data.currentIndex ?? 0;
+    score = data.score ?? 0;
+    henryRemaining = data.henryRemaining ?? HENRY_STARTING_SCORE;
+    answered = data.answered ?? false;
+    currentAnswerCorrect = data.currentAnswerCorrect ?? false;
 
+    completedMissions.clear();
+    (data.completedMissions || []).forEach(id => completedMissions.add(id));
 
-  (data.completedMissions || [])
-    .forEach(id =>
-      completedMissions.add(id)
-    );
+    updateScoreUI();
+    updateMissionProgress();
 
-  updateScoreUI();
-  updateMissionProgress();
+    const q = QUESTIONS[currentIndex];
 
-  const q = QUESTIONS[currentIndex];
-
-  if (!q) {
-    showResultScreen();
-    syncingRemote = false;
-    return;
-  }
-
-  const screen = data.screen || "";
-
-  console.log("SCREEN FIREBASE =", screen);
-
-  switch (screen) {
-
-    case "screen-start":
-      showScreen("start");
-      break;
-
-    case "screen-question":
-      showScreen("question");
-      if (currentIndex !== localCurrentIndex) {
-        loadQuestion(currentIndex);
-      } break;
-
-    case "screen-answer": {
-
-      const q = QUESTIONS.find(
-        q => q.id === data.lastAnswerQuestionId
-      );
-
-      if (q && data.lastAnswerResult) {
-
-        publishAnswer(
-          data.lastAnswerResult,
-          q,
-          true
-        );
-
-      } else {
-
-        showScreen("answer");
-
-      }
-
-      break;
+    if (!q) {
+      showResultScreen();
+      return;
     }
 
-    case "screen-result":
-      showResultScreen();
-      break;
+    const screen = data.screen || "";
 
-    default:
-      console.warn("Screen inconnue :", screen);
+    switch (screen) {
+      case "screen-start":
+        showScreen("start");
+        break;
+
+      case "screen-question":
+        showScreen("question");
+
+        if (currentIndex !== lastLoadedIndex) {
+          loadQuestion(currentIndex);
+          lastLoadedIndex = currentIndex;
+        }
+        break;
+
+      case "screen-answer": {
+        const qAnswer = QUESTIONS.find(q => q.id === data.lastAnswerQuestionId);
+
+        if (qAnswer && data.lastAnswerResult) {
+          publishAnswer(data.lastAnswerResult, qAnswer, true);
+        } else {
+          showScreen("answer");
+        }
+        break;
+      }
+
+      case "screen-result":
+        showResultScreen();
+        break;
+
+      default:
+        console.warn("Screen inconnue :", screen);
+    }
+  } finally {
+    syncingRemote = false;
   }
-
-  syncingRemote = false;
 });
