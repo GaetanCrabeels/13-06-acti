@@ -32,26 +32,13 @@ async function syncState() {
         ?.id
   });
   await update(sessionRef, {
-
-    currentIndex,
-    score,
-    henryRemaining,
-
-    answered,
-    currentAnswerCorrect,
-
-    screen:
-      document
-        .querySelector(".screen.active")
-        ?.id || "",
-
-    completedMissions: [...completedMissions],
-
-    lastAnswerResult,
-    lastAnswerQuestionId,
-
-    timestamp: Date.now()
-  });
+  currentIndex,
+  score,
+  henryRemaining,
+  completedMissions: [...completedMissions],
+  screen: document.querySelector(".screen.active")?.id || "",
+  timestamp: Date.now()
+});
   console.log(
     "SCREEN ENVOYE",
     document.querySelector(".screen.active")?.id
@@ -323,7 +310,7 @@ function updateMissionProgress() {
   if (elMissionsProgressBar) {
     elMissionsProgressBar.style.width = `${Math.round(ratio * 100)}%`;
   }
-  if (!syncingRemote) {
+  if (!syncingRemote && data.uiLock) {
     syncState();
   }
 }
@@ -333,9 +320,7 @@ function startQuiz() {
   score = 0;
   answered = false;
   currentAnswerCorrect = false;
-  usedHints.clear();
-  pointsByGroup.clear();
-  completedMissions.clear();
+
   if (elMissionsContent) {
     Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
       checkbox.checked = false;
@@ -344,8 +329,9 @@ function startQuiz() {
   updateMissionProgress();
   resetHenryStage();
   showScreen("question");
-  loadQuestion(currentIndex);
-  syncState();
+  if (currentIndex !== localCurrentIndex) {
+    loadQuestion(currentIndex);
+  } syncState();
 }
 
 function resetHenryStage() {
@@ -1189,7 +1175,9 @@ elNextBtn.addEventListener("click", () => {
       advanceToNextQuestion();
     } else {
       showScreen("question");
-      loadQuestion(currentIndex);
+      if (currentIndex !== localCurrentIndex) {
+        loadQuestion(currentIndex);
+      }
     }
     return;
   }
@@ -1271,10 +1259,12 @@ function clearAutoAdvance() {
   }
 }
 function publishAnswer(result, q) {
-
-  lastAnswerResult = structuredClone(result);
-  lastAnswerQuestionId = q.id;
-
+  update(sessionRef, {
+    lastAnswerResult: result,
+    lastAnswerQuestionId: q.id,
+    screen: "screen-answer",
+    timestamp: Date.now()
+  });
 }
 function advanceToNextQuestion() {
 
@@ -1619,7 +1609,6 @@ onValue(sessionRef, (snapshot) => {
   answered = data.answered ?? false;
   currentAnswerCorrect = data.currentAnswerCorrect ?? false;
 
-  completedMissions.clear();
 
   (data.completedMissions || [])
     .forEach(id =>
@@ -1649,8 +1638,9 @@ onValue(sessionRef, (snapshot) => {
 
     case "screen-question":
       showScreen("question");
-      loadQuestion(currentIndex);
-      break;
+      if (currentIndex !== localCurrentIndex) {
+        loadQuestion(currentIndex);
+      } break;
 
     case "screen-answer": {
 
