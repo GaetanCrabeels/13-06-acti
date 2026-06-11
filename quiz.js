@@ -293,18 +293,19 @@ function renderMissionsPanel() {
 
   Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
-  const missionItemId = checkbox.dataset.missionItemId;
-  if (!missionItemId) return;
+      if (syncingRemote || applyingRemoteState) return;
+      const missionItemId = checkbox.dataset.missionItemId;
+      if (!missionItemId) return;
 
-  if (checkbox.checked) completedMissions.add(missionItemId);
-  else completedMissions.delete(missionItemId);
+      if (checkbox.checked) completedMissions.add(missionItemId);
+      else completedMissions.delete(missionItemId);
 
-  updateMissionProgress();
+      updateMissionProgress();
 
-  if (!syncingRemote) {
-    syncState();
-  }
-});
+      if (!syncingRemote) {
+        syncState();
+      }
+    });
   });
   updateMissionProgress();
 }
@@ -641,16 +642,20 @@ function submitMatchAnswer() {
 }
 
 function submitSliderAnswer() {
+  if (syncingRemote || applyingRemoteState) return;
   if (answered) return;
+
   const q = currentQuestion;
   if (q.kind !== "range-slider") return;
 
   answered = true;
   stopTimer();
+
   const result = evaluateAnswer(q, elRangeInput.value);
+  currentAnswerCorrect = result.correct;
+
   publishAnswer(result, q);
 }
-
 function updateSliderValueLabel(value, unit) {
   elRangeValue.textContent = `${value} ${unit}`.trim();
 }
@@ -828,6 +833,7 @@ function stopTimer() {
 }
 
 function handleMcqAnswer(selected, q) {
+  if (syncingRemote || applyingRemoteState) return;
   if (answered) return;
   answered = true;
   stopTimer();
@@ -884,8 +890,8 @@ elFreeForm.addEventListener("submit", (e) => {
 });
 
 function submitFreeAnswer() {
-  if (answered) return;
-  const q = QUESTIONS[currentIndex];
+  if (syncingRemote || applyingRemoteState) return;
+  if (answered) return; const q = QUESTIONS[currentIndex];
   const value = elFreeInput.value.trim();
   if (!value) return;
 
