@@ -1275,7 +1275,6 @@ function publishAnswer(result, q) {
   lastAnswerResult = structuredClone(result);
   lastAnswerQuestionId = q.id;
 
-  publishAnswer(result, q);
 }
 function advanceToNextQuestion() {
 
