@@ -1538,6 +1538,7 @@ function shouldShowSignBriefing(q) {
     questionId: q.id,
     alreadySeen: seenSignBriefings.has(q.id)
   });
+  syncState();
   return q.section?.toLowerCase().includes("signe distinctif") && !seenSignBriefings.has(q.id);
 }
 
