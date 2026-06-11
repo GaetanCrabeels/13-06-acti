@@ -40,10 +40,10 @@ async function syncState() {
     timestamp: Date.now()
   });
   console.log("SYNC", {
-  currentIndex,
-  screen: document.querySelector(".screen.active")?.id,
-  answered
-});
+    currentIndex,
+    screen: document.querySelector(".screen.active")?.id,
+    answered
+  });
 }
 let lastLoadedIndex = -1;
 let localCurrentIndex = -1;
@@ -699,7 +699,10 @@ function submitAcknowledgement() {
     elInstructions.textContent = instructionsText;
     elInstructions.style.display = instructionsText ? "block" : "none";
     elQuestionText.innerHTML = q.question;
+
     configureTimer(getQuestionTimer(q));
+    syncState();
+
     return;
   }
   if (q.kind !== "acknowledgement") return;
@@ -1662,6 +1665,11 @@ window.resetFirebaseQuiz = async () => {
 
 };
 onValue(sessionRef, (snapshot) => {
+  console.log("REMOTE", {
+    currentIndex,
+    lastLoadedIndex,
+    screen
+  });
   const data = snapshot.val();
   if (!data) {
     // No session yet: stay on start screen, initialise panels
