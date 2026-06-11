@@ -224,6 +224,12 @@ function replaceFlags(text) {
     .replace(/🇪🇸/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/es.png" alt="Espagne">')
     .replace(/🇬🇧/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/gb.png" alt="Royaume-Uni">');
 }
+  function resetQuestionState() {
+  answered = false;
+  currentAnswerCorrect = false;
+  signBriefingQuestionId = null;
+  clearAutoAdvance();
+}
 function toggleFloatingPanel(panel, button, otherPanel, otherButton) {
   const willOpen = !panel.classList.contains("open");
   panel.classList.toggle("open", willOpen);
@@ -368,6 +374,7 @@ function showScreen(name) {
 }
 
 function loadQuestion(index) {
+  resetQuestionState();
   if (index < START_QUESTION_INDEX) {
     currentIndex = START_QUESTION_INDEX;
     index = START_QUESTION_INDEX;
@@ -1305,7 +1312,7 @@ function publishAnswer(result, q, fromRemote = false) {
 }
 function advanceToNextQuestion() {
   currentIndex += 1;
-
+  resetQuestionState();
   if (currentIndex >= QUESTIONS.length) {
     update(sessionRef, { screen: "screen-result", timestamp: Date.now() });
     showResultScreen();
@@ -1674,6 +1681,7 @@ onValue(sessionRef, (snapshot) => {
       case "screen-question":
         showScreen("question");
         if (currentIndex !== lastLoadedIndex) {
+          resetQuestionState();
           loadQuestion(currentIndex);
           lastLoadedIndex = currentIndex;
           localCurrentIndex = currentIndex;
