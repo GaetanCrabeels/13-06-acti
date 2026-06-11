@@ -25,12 +25,12 @@ async function syncState() {
 
   if (syncingRemote) return;
   console.log("SYNC", {
-  currentIndex,
-  screen:
-    document
-      .querySelector(".screen.active")
-      ?.id
-});
+    currentIndex,
+    screen:
+      document
+        .querySelector(".screen.active")
+        ?.id
+  });
   await update(sessionRef, {
 
     currentIndex,
@@ -626,7 +626,7 @@ function submitMatchAnswer() {
   stopTimer();
   const correctMatches = q.pairs.filter((pair) => currentMatchLinks.get(pair.left) === pair.right).length;
   const addedPoints = correctMatches * (q.pointsPerMatch ?? 0);
-  showAnswerScreen(
+  publishAnswer(
     {
       correct: true,
       addedPoints,
@@ -646,7 +646,7 @@ function submitSliderAnswer() {
   answered = true;
   stopTimer();
   const result = evaluateAnswer(q, elRangeInput.value);
-  showAnswerScreen(result, q);
+  publishAnswer(result, q);
 }
 
 function updateSliderValueLabel(value, unit) {
@@ -688,7 +688,7 @@ function submitAcknowledgement() {
   }
   answered = true;
   stopTimer();
-  showAnswerScreen(
+  publishAnswer(
     {
       correct: true,
       addedPoints: q.points ?? 0,
@@ -842,7 +842,7 @@ function handleMcqAnswer(selected, q) {
     return;
   }
 
-  setTimeout(() => showAnswerScreen(result, q), 300);
+  setTimeout(() => publishAnswer(result, q), 300);
 }
 
 function highlightMcqOptions(selected, q, isCorrect) {
@@ -890,7 +890,7 @@ function submitFreeAnswer() {
   answered = true;
   stopTimer();
   const result = evaluateAnswer(q, value);
-  showAnswerScreen(result, q);
+  publishAnswer(result, q);
 }
 
 function handleTimeout() {
@@ -902,14 +902,14 @@ function handleTimeout() {
     highlightMcqOptions("__none__", q, false);
   }
 
-  showAnswerScreen({ correct: false, addedPoints: 0, answerDisplay: getAnswerDisplay(q), timeout: true }, q);
+  publishAnswer({ correct: false, addedPoints: 0, answerDisplay: getAnswerDisplay(q), timeout: true }, q);
 }
 
 function handleHenryAnswer(result, q) {
   clearAutoAdvance();
   currentAnswerCorrect = result.correct;
 
-  if (result.correct && q.henryFinal && !henryAwarded && !remote) {
+  if (result.correct && q.henryFinal && !henryAwarded) {
     score += henryRemaining;
     henryAwarded = true;
     updateScoreUI();
@@ -922,7 +922,7 @@ function handleHenryAnswer(result, q) {
 
   autoAdvanceTimeout = window.setTimeout(() => {
     if (q.henryFinal) {
-      showAnswerScreen(
+      publishAnswer(
         {
           ...result,
           correct: true,
@@ -1270,16 +1270,24 @@ function clearAutoAdvance() {
     autoAdvanceTimeout = null;
   }
 }
+function publishAnswer(result, q) {
 
+  lastAnswerResult = structuredClone(result);
+  lastAnswerQuestionId = q.id;
+
+  publishAnswer(result, q);
+}
 function advanceToNextQuestion() {
+
   currentIndex += 1;
 
-  syncState(); if (currentIndex >= QUESTIONS.length) {
+  if (currentIndex >= QUESTIONS.length) {
+
     showResultScreen();
     return;
   }
-  showScreen("question");
-  loadQuestion(currentIndex);
+
+  syncState();
 }
 
 function looksLikeCoordinates(value) {
@@ -1631,19 +1639,49 @@ onValue(sessionRef, (snapshot) => {
   }
 
   const screen = data.screen || "";
+
   console.log("SCREEN FIREBASE =", screen);
-  if (screen.includes("answer")) {
 
-    showScreen("answer");
+  switch (screen) {
 
-  } else if (screen.includes("result")) {
+    case "screen-start":
+      showScreen("start");
+      break;
 
-    showResultScreen();
+    case "screen-question":
+      showScreen("question");
+      loadQuestion(currentIndex);
+      break;
 
-  } else {
+    case "screen-answer": {
 
-    showScreen("question");
-    loadQuestion(currentIndex);
+      const q = QUESTIONS.find(
+        q => q.id === data.lastAnswerQuestionId
+      );
+
+      if (q && data.lastAnswerResult) {
+
+        publishAnswer(
+          data.lastAnswerResult,
+          q,
+          true
+        );
+
+      } else {
+
+        showScreen("answer");
+
+      }
+
+      break;
+    }
+
+    case "screen-result":
+      showResultScreen();
+      break;
+
+    default:
+      console.warn("Screen inconnue :", screen);
   }
 
   syncingRemote = false;
