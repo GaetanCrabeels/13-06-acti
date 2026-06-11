@@ -1677,6 +1677,8 @@ onValue(sessionRef, (snapshot) => {
     lastLoadedIndex,
     screen
   });
+  const remoteIndex = data.currentIndex ?? 0;
+  const q = QUESTIONS[remoteIndex];
   const data = snapshot.val();
   if (!data) {
     // No session yet: stay on start screen, initialise panels
@@ -1686,22 +1688,22 @@ onValue(sessionRef, (snapshot) => {
   }
 
   syncingRemote = true;
+  currentIndex = data.currentIndex ?? 0;
+  score = data.score ?? 0;
+  henryRemaining = data.henryRemaining ?? HENRY_STARTING_SCORE;
+  answered = data.answered ?? false;
+  currentAnswerCorrect = data.currentAnswerCorrect ?? false;
+  seenSignBriefings.clear();
+  (data.seenSignBriefings || []).forEach(id => seenSignBriefings.add(id));
+  completedMissions.clear();
+  (data.completedMissions || []).forEach(id => completedMissions.add(id));
 
+
+  updateScoreUI();
+  updateMissionProgress();
   try {
-    currentIndex = data.currentIndex ?? 0;
-    score = data.score ?? 0;
-    henryRemaining = data.henryRemaining ?? HENRY_STARTING_SCORE;
-    answered = data.answered ?? false;
-    currentAnswerCorrect = data.currentAnswerCorrect ?? false;
-    seenSignBriefings.clear();
-    (data.seenSignBriefings || []).forEach(id => seenSignBriefings.add(id));
-    completedMissions.clear();
-    (data.completedMissions || []).forEach(id => completedMissions.add(id));
 
-    updateScoreUI();
-    updateMissionProgress();
 
-    const q = QUESTIONS[currentIndex];
 
     const screen = data.screen || "screen-start";
 
