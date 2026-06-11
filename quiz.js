@@ -1,4 +1,52 @@
-let currentIndex = 0;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  update,
+  onValue
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBdCyzZpGL0lpHLJwVhZwa0Q4y9QFHFq58",
+  authDomain: "totemolle.firebaseapp.com",
+  databaseURL: "https://totemolle-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "totemolle",
+  storageBucket: "totemolle.firebasestorage.app",
+  messagingSenderId: "288994960428",
+  appId: "1:288994960428:web:bca3da82327a6084fadd89"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const SESSION_ID = "quiz-live";
+
+const sessionRef = ref(db, `sessions/${SESSION_ID}`);
+async function syncState() {
+
+  if (syncingRemote) return;
+
+  await update(sessionRef, {
+
+    currentIndex,
+    score,
+    henryRemaining,
+
+    answered,
+    currentAnswerCorrect,
+
+    screen:
+      document
+        .querySelector(".screen.active")
+        ?.id || "",
+
+    completedMissions:
+      [...completedMissions],
+
+    timestamp: Date.now()
+  });
+}
+let syncingRemote = false;
 let score = 0;
 let timerInterval = null;
 let timeLeft = 0;
@@ -261,6 +309,9 @@ function updateMissionProgress() {
   if (elMissionsProgressBar) {
     elMissionsProgressBar.style.width = `${Math.round(ratio * 100)}%`;
   }
+  if (!syncingRemote) {
+  syncState();
+}
 }
 
 function startQuiz() {
@@ -280,6 +331,7 @@ function startQuiz() {
   resetHenryStage();
   showScreen("question");
   loadQuestion(currentIndex);
+  syncState();
 }
 
 function resetHenryStage() {
@@ -1063,7 +1115,7 @@ function showAnswerScreen(result, q) {
       elNextBtn.click();
     }, ANSWER_AUTO_SKIP_DELAY);
   }
-
+  syncState();
   return false;
 }
 function hasDetailedAnswer(q, result) {
@@ -1198,7 +1250,8 @@ function clearAutoAdvance() {
 
 function advanceToNextQuestion() {
   currentIndex += 1;
-  if (currentIndex >= QUESTIONS.length) {
+
+  syncState(); if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
     return;
   }
@@ -1509,3 +1562,64 @@ function getCachedRegex(pattern) {
   }
   return answerRegexCache.get(pattern);
 }
+window.resetFirebaseQuiz = async () => {
+
+  await set(sessionRef, {
+    currentIndex: 0,
+    score: 0,
+    henryRemaining: HENRY_STARTING_SCORE,
+    completedMissions: [],
+    screen: "screen-start"
+  });
+
+};
+onValue(sessionRef, (snapshot) => {
+
+  const data = snapshot.val();
+
+  if (!data) return;
+
+  syncingRemote = true;
+
+  currentIndex = data.currentIndex ?? 0;
+  score = data.score ?? 0;
+  henryRemaining = data.henryRemaining ?? HENRY_STARTING_SCORE;
+  answered = data.answered ?? false;
+  currentAnswerCorrect = data.currentAnswerCorrect ?? false;
+
+  completedMissions.clear();
+
+  (data.completedMissions || [])
+    .forEach(id =>
+      completedMissions.add(id)
+    );
+
+  updateScoreUI();
+  updateMissionProgress();
+
+  const q = QUESTIONS[currentIndex];
+
+  if (!q) {
+    showResultScreen();
+    syncingRemote = false;
+    return;
+  }
+
+  const screen = data.screen || "";
+
+  if (screen.includes("answer")) {
+
+    showScreen("answer");
+
+  } else if (screen.includes("result")) {
+
+    showResultScreen();
+
+  } else {
+
+    showScreen("question");
+    loadQuestion(currentIndex);
+  }
+
+  syncingRemote = false;
+});
