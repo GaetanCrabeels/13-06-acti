@@ -44,7 +44,8 @@ async function syncState() {
     document.querySelector(".screen.active")?.id
   );
 }
-let lastLoadedIndex  =-1;
+let lastLoadedIndex = -1;
+let localCurrentIndex = -1;
 let applyingRemoteState = false;
 let uiLock = false;
 let currentIndex = 0;
@@ -215,8 +216,7 @@ const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
-renderMissionsPanel();
-updateObjectivesPanel();
+// renderMissionsPanel and updateObjectivesPanel are called after startQuiz / remote sync
 function replaceFlags(text) {
   return text
     .replace(/🇫🇷/g, '<img class="flag-emoji" src="https://www.drapeauxdespays.fr/data/flags/emoji/google/160x160/fr.png" alt="France">')
@@ -341,13 +341,13 @@ function startQuiz() {
       checkbox.checked = false;
     });
   }
+  completedMissions.clear();
   updateMissionProgress();
   resetHenryStage();
   showScreen("question");
-  if (currentIndex !== localCurrentIndex) {
-    loadQuestion(currentIndex);
-    localCurrentIndex = currentIndex;
-  } syncState();
+  loadQuestion(currentIndex);
+  localCurrentIndex = currentIndex;
+  syncState();
 }
 
 function resetHenryStage() {
@@ -742,7 +742,7 @@ elHintBtn.addEventListener("click", () => {
   const q = QUESTIONS[currentIndex];
   if (!q.hint || usedHints.has(q.id)) return;
   usedHints.add(q.id);
-  if (!remote) {
+  if (!syncingRemote) {
     score += q.hint.penalty ?? 0;
   }
 
@@ -1051,12 +1051,13 @@ function showAnswerScreen(result, q, remote = false) {
     addedPoints += henryRemaining;
     henryAwarded = true;
     stopHenryTimer();
+    // Score was already set in publishAnswer for the base points;
+    // add the henry bonus here
+    score += henryRemaining;
   }
 
   if (result.correct) {
-    if (!remote) {
-      score += addedPoints;
-    }
+    // Score already updated by publishAnswer for non-remote, just refresh UI
     addGroupPoints(q, addedPoints);
     updateScoreUI();
     elAnswerIcon.textContent = "✅";
@@ -1140,7 +1141,6 @@ function showAnswerScreen(result, q, remote = false) {
       elNextBtn.click();
     }, ANSWER_AUTO_SKIP_DELAY);
   }
-  syncState();
   return false;
 }
 function hasDetailedAnswer(q, result) {
@@ -1191,11 +1191,12 @@ elNextBtn.addEventListener("click", () => {
       advanceToNextQuestion();
     } else {
       showScreen("question");
-      if (currentIndex !== localCurrentIndex) {
+      if (currentIndex !== lastLoadedIndex) {
         loadQuestion(currentIndex);
+        lastLoadedIndex = currentIndex;
         localCurrentIndex = currentIndex;
-
       }
+      syncState();
     }
     return;
   }
@@ -1276,25 +1277,42 @@ function clearAutoAdvance() {
     autoAdvanceTimeout = null;
   }
 }
-function publishAnswer(result, q) {
-  update(sessionRef, {
-    lastAnswerResult: result,
-    lastAnswerQuestionId: q.id,
-    screen: "screen-answer",
-    timestamp: Date.now()
-  });
+function publishAnswer(result, q, fromRemote = false) {
+  if (!fromRemote) {
+    // Apply score locally
+    if (result.correct && !fromRemote) {
+      score += result.addedPoints ?? 0;
+    }
+    // Persist to Firebase for remote clients
+    update(sessionRef, {
+      lastAnswerResult: result,
+      lastAnswerQuestionId: q.id,
+      answered: true,
+      currentAnswerCorrect: result.correct,
+      score,
+      screen: "screen-answer",
+      timestamp: Date.now()
+    });
+  }
+  // Always render locally
+  showAnswerScreen(result, q, fromRemote);
 }
 function advanceToNextQuestion() {
-
   currentIndex += 1;
 
   if (currentIndex >= QUESTIONS.length) {
-
+    update(sessionRef, { screen: "screen-result", timestamp: Date.now() });
     showResultScreen();
     return;
   }
 
+  answered = false;
+  currentAnswerCorrect = false;
   syncState();
+  showScreen("question");
+  loadQuestion(currentIndex);
+  localCurrentIndex = currentIndex;
+  lastLoadedIndex = currentIndex;
 }
 
 function looksLikeCoordinates(value) {
@@ -1613,7 +1631,12 @@ window.resetFirebaseQuiz = async () => {
 };
 onValue(sessionRef, (snapshot) => {
   const data = snapshot.val();
-  if (!data) return;
+  if (!data) {
+    // No session yet: stay on start screen, initialise panels
+    renderMissionsPanel();
+    updateObjectivesPanel();
+    return;
+  }
 
   syncingRemote = true;
 
@@ -1632,32 +1655,30 @@ onValue(sessionRef, (snapshot) => {
 
     const q = QUESTIONS[currentIndex];
 
-    if (!q) {
-      showResultScreen();
-      return;
-    }
-
-    const screen = data.screen || "";
+    const screen = data.screen || "screen-start";
 
     switch (screen) {
       case "screen-start":
+        // Stay on start screen — do NOT auto-advance
         showScreen("start");
+        renderMissionsPanel();
+        updateObjectivesPanel();
         break;
 
       case "screen-question":
         showScreen("question");
-
         if (currentIndex !== lastLoadedIndex) {
           loadQuestion(currentIndex);
           lastLoadedIndex = currentIndex;
+          localCurrentIndex = currentIndex;
         }
         break;
 
       case "screen-answer": {
         const qAnswer = QUESTIONS.find(q => q.id === data.lastAnswerQuestionId);
-
         if (qAnswer && data.lastAnswerResult) {
-          publishAnswer(data.lastAnswerResult, qAnswer, true);
+          // fromRemote=true prevents double score addition
+          showAnswerScreen(data.lastAnswerResult, qAnswer, true);
         } else {
           showScreen("answer");
         }
@@ -1669,7 +1690,13 @@ onValue(sessionRef, (snapshot) => {
         break;
 
       default:
+        // Unknown or missing screen: stay on start
+        showScreen("start");
         console.warn("Screen inconnue :", screen);
+    }
+
+    if (!q) {
+      showResultScreen();
     }
   } finally {
     syncingRemote = false;
