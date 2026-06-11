@@ -18,6 +18,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+let currentIndex = 0 ;
 
 const SESSION_ID = "quiz-live";
 
@@ -40,8 +41,7 @@ async function syncState() {
         .querySelector(".screen.active")
         ?.id || "",
 
-    completedMissions:
-      [...completedMissions],
+    completedMissions:[...completedMissions],
 
     timestamp: Date.now()
   });
