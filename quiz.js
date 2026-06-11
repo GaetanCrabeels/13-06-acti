@@ -680,7 +680,8 @@ if (elAckSubmit) elAckSubmit.addEventListener("click", submitAcknowledgement);
 function submitAcknowledgement() {
   console.log({
   signBriefingQuestionId,
-  currentQuestionId: q?.id
+  currentQuestionId: q?.id,
+  answered
 });
   if (answered) return;
   const q = currentQuestion;
