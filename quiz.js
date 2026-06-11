@@ -36,6 +36,8 @@ async function syncState() {
     score,
     henryRemaining,
     completedMissions: [...completedMissions],
+    seenSignBriefings: [...seenSignBriefings], // 👈 AJOUT
+
     screen: document.querySelector(".screen.active")?.id || "",
     timestamp: Date.now()
   });
@@ -1538,7 +1540,7 @@ function shouldShowSignBriefing(q) {
     questionId: q.id,
     alreadySeen: seenSignBriefings.has(q.id)
   });
-  syncState();
+
   return q.section?.toLowerCase().includes("signe distinctif") && !seenSignBriefings.has(q.id);
 }
 
@@ -1691,7 +1693,8 @@ onValue(sessionRef, (snapshot) => {
     henryRemaining = data.henryRemaining ?? HENRY_STARTING_SCORE;
     answered = data.answered ?? false;
     currentAnswerCorrect = data.currentAnswerCorrect ?? false;
-
+    seenSignBriefings.clear();
+    (data.seenSignBriefings || []).forEach(id => seenSignBriefings.add(id));
     completedMissions.clear();
     (data.completedMissions || []).forEach(id => completedMissions.add(id));
 
