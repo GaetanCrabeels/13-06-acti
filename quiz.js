@@ -1678,8 +1678,8 @@ onValue(sessionRef, (snapshot) => {
     screen
   });
   const data = snapshot.val();
-  const remoteIndex = data.currentIndex ?? 0;
-  const q = QUESTIONS[remoteIndex];
+
+
 
   if (!data) {
     // No session yet: stay on start screen, initialise panels
@@ -1688,6 +1688,8 @@ onValue(sessionRef, (snapshot) => {
     return;
   }
 
+  const remoteIndex = data.currentIndex ?? 0;
+  const q = QUESTIONS[remoteIndex];
   syncingRemote = true;
   currentIndex = data.currentIndex ?? 0;
   score = data.score ?? 0;
