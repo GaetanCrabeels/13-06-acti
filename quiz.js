@@ -717,6 +717,7 @@ function submitAcknowledgement() {
     showResultScreen();
     return;
   }
+
   answered = true;
   stopTimer();
   publishAnswer(
@@ -1294,6 +1295,10 @@ function getComputedMaxScore() {
 
 elRestartBtn.addEventListener("click", () => {
   showScreen("start");
+  update(sessionRef, {
+      screen: "screen-start",
+      timestamp: Date.now()
+    });
 });
 
 function updateScoreUI() {
