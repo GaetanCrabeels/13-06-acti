@@ -1,33 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-let quizRef = null;
-let syncEnabled = false;
-const firebaseConfig = {
-  apiKey: "AIzaSyBdCyzZpGL0lpHLJwVhZwa0Q4y9QFHFq58",
-  authDomain: "totemolle.firebaseapp.com",
-  databaseURL: "https://totemolle-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "totemolle",
-  storageBucket: "totemolle.firebasestorage.app",
-  messagingSenderId: "288994960428",
-  appId: "1:288994960428:web:bca3da82327a6084fadd89"
-};
-let currentScreen = "start";
-let isRemoteUpdate = false;
 let currentIndex = 0;
 let score = 0;
-
-const app = initializeApp(firebaseConfig);
-let db = getDatabase(app);
-
-window.addEventListener("load", () => {
-  initSync(db);
-});
-let firebaseReady = false;
 let timerInterval = null;
 let timeLeft = 0;
 let answered = false;
 let currentAnswerCorrect = false;
-let currentLastResult = null;
 let currentQuestion = null;
 let currentOptions = [];
 let currentMatchSelection = null;
@@ -49,6 +25,7 @@ const MATCH_PLACEHOLDER = "Choisissez une démographie";
 const ABSURD_VALUE_MULTIPLIER = 2;
 const POINTS_DECIMAL_PRECISION = 100;
 const START_QUESTION_INDEX = 0;
+const QUIZ_TOTAL = QUESTIONS.length;
 const LEAF_OBJECTIVE_UNLOCK_INDEX = (() => {
   const unlockIndex = QUESTIONS.findIndex((question) => question.section === "Épreuve feuilles");
   return unlockIndex >= 0 ? unlockIndex : Number.POSITIVE_INFINITY;
@@ -92,6 +69,7 @@ const elMcqOptions = document.getElementById("mcq-options");
 const elMolkkyForm = document.getElementById("molkky-form");
 const elMolkkyScoreInput = document.getElementById("molkky-score-input");
 const elMolkkyObjectivesList = document.getElementById("molkky-objectives-list");
+const elMolkkySubmit = document.getElementById("molkky-submit");
 const elMatchForm = document.getElementById("match-form");
 const elMatchRows = document.getElementById("match-rows");
 const elMatchSubmit = document.getElementById("match-submit");
@@ -185,106 +163,7 @@ const startButton = document.getElementById("btn-start");
 startButton.addEventListener("click", startQuiz);
 elObjectivesTab.addEventListener("click", () => toggleFloatingPanel(elObjectivesPanel, elObjectivesTab, elMissionsPanel, elMissionsTab));
 elMissionsTab.addEventListener("click", () => toggleFloatingPanel(elMissionsPanel, elMissionsTab, elObjectivesPanel, elObjectivesTab));
-function initSync(firebaseDatabase) {
-  db = firebaseDatabase;
-  quizRef = ref(db, "quiz/state");
-
-  onValue(quizRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-
-    if (!firebaseReady) {
-      firebaseReady = true;
-
-      // sync initial UNE SEULE FOIS
-      isRemoteUpdate = true;
-
-      score = data.score ?? 0;
-      currentIndex = data.currentIndex ?? 0;
-      currentScreen = data.screen ?? "start";
-
-      applyRemoteState(data);
-
-      isRemoteUpdate = false;
-      return;
-    }
-
-    // 👇 IMPORTANT : ne rien faire si update identique
-    if (
-      data.currentIndex === currentIndex &&
-      data.screen === currentScreen &&
-      data.score === score
-    ) return;
-
-    isRemoteUpdate = true;
-
-    score = data.score ?? score;
-    currentIndex = data.currentIndex ?? currentIndex;
-    currentScreen = data.screen ?? currentScreen;
-
-    applyRemoteState(data);
-
-    isRemoteUpdate = false;
-  });
-
-  syncEnabled = true;
-}
-
-function applyRemoteState(data) {
-  if (!data) return;
-
-  isRemoteUpdate = true;
-
-  try {
-    if (data.score !== undefined) score = data.score;
-    if (data.currentIndex !== undefined) currentIndex = data.currentIndex;
-    if (data.answered !== undefined) answered = data.answered;
-    if (data.answerCorrect !== undefined) currentAnswerCorrect = data.answerCorrect;
-
-    const screen = data.screen ?? currentScreen;
-
-    switch (screen) {
-      case "start":
-        showScreen("start");
-        break;
-
-      case "question":
-        showScreen("question");
-        loadQuestion(currentIndex);
-        break;
-
-      case "answer":
-        if (data.lastResult && QUESTIONS[currentIndex]) {
-          showScreen("answer");
-          renderAnswerScreen(data.lastResult, QUESTIONS[currentIndex]);
-        }
-        break;
-
-      case "result":
-        showResultScreen();
-        break;
-    }
-  } finally {
-    isRemoteUpdate = false;
-  }
-}
-function syncState() {
-  if (!syncEnabled || !quizRef) return;
-  if (isRemoteUpdate) return;
-
-  set(quizRef, {
-    currentIndex,
-    score,
-    screen: currentScreen,
-    answered,
-    answerCorrect: currentAnswerCorrect,
-    lastResult: currentLastResult ?? null,
-  });
-}
-
-
 renderMissionsPanel();
-
 updateObjectivesPanel();
 function replaceFlags(text) {
   return text
@@ -387,22 +266,20 @@ function updateMissionProgress() {
 function startQuiz() {
   currentIndex = START_QUESTION_INDEX;
   score = 0;
-
   answered = false;
   currentAnswerCorrect = false;
-
   usedHints.clear();
   pointsByGroup.clear();
   completedMissions.clear();
-  currentLastResult = null;
-
+  if (elMissionsContent) {
+    Array.from(elMissionsContent.querySelectorAll("input[type='checkbox']")).forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+  }
+  updateMissionProgress();
+  resetHenryStage();
   showScreen("question");
   loadQuestion(currentIndex);
-
-  // sync différé (important pour éviter race Firebase)
-  setTimeout(() => {
-    if (syncEnabled) syncState();
-  }, 100);
 }
 
 function resetHenryStage() {
@@ -414,19 +291,12 @@ function resetHenryStage() {
 }
 
 function showScreen(name) {
-  Object.values(screens).forEach((s) =>
-    s.classList.remove("active")
-  );
-
+  Object.values(screens).forEach((s) => s.classList.remove("active"));
   screens[name].classList.add("active");
-
-  currentScreen = name;
-
   updateObjectivesPanel();
 }
 
 function loadQuestion(index) {
-  if (index === currentIndex && currentQuestion) return;
   if (index < START_QUESTION_INDEX) {
     currentIndex = START_QUESTION_INDEX;
     index = START_QUESTION_INDEX;
@@ -439,7 +309,6 @@ function loadQuestion(index) {
   clearAutoAdvance();
   answered = false;
   currentAnswerCorrect = false;
-  currentLastResult = null;
   currentQuestion = QUESTIONS[index];
   currentOptions = getQuestionOptions(currentQuestion);
   currentMatchSelection = null;
@@ -448,7 +317,8 @@ function loadQuestion(index) {
 
   const q = currentQuestion;
   elQuestionNumber.textContent = Math.max(1, index - START_QUESTION_INDEX + 1);
-  elQuestionTotal.textContent = QUESTIONS.length; updateScoreUI();
+  elQuestionTotal.textContent = QUIZ_TOTAL;
+  updateScoreUI();
   elStageLabel.innerHTML = getDisplayStageLabel(q);
   elSection.textContent = getDisplaySectionLabel(q);
   const instructionsText = getInstructionsText(q);
@@ -471,56 +341,71 @@ function loadQuestion(index) {
   updateObjectivesPanel();
 }
 
-function hideAllForms() {
-  elMcqOptions.style.display = "none";
-  elMatchForm.style.display = "none";
-  elMolkkyForm.style.display = "none";
-  elSliderForm.style.display = "none";
-  elFreeForm.style.display = "none";
-}
-
 function renderQuestionInput(q) {
   elMcqOptions.innerHTML = "";
   if (elMolkkyObjectivesList) elMolkkyObjectivesList.innerHTML = "";
   if (elMatchRows) elMatchRows.innerHTML = "";
   elAckForm.style.display = "none";
-  elAckSubmit.textContent = q.directResult === true ? "Voir le score final" : "OK";
+  if (q.directResult === true) {
+    elAckSubmit.textContent = "Voir le score final";
+  } else {
+    elAckSubmit.textContent = "OK";
+  }
 
   if (q.kind === "molkky-start") {
-    hideAllForms();
+    elMcqOptions.style.display = "none";
+    elMatchForm.style.display = "none";
+    elSliderForm.style.display = "none";
+    elFreeForm.style.display = "none";
     elMolkkyForm.style.display = "flex";
     renderMolkkyQuestion(q);
     return;
   }
 
   if (q.kind === "match-pairs") {
-    hideAllForms();
+    elMcqOptions.style.display = "none";
+    elMolkkyForm.style.display = "none";
+    elSliderForm.style.display = "none";
+    elFreeForm.style.display = "none";
     elMatchForm.style.display = "flex";
     renderMatchQuestion(q);
     return;
   }
 
   if (q.kind === "range-slider") {
-    hideAllForms();
+    elMcqOptions.style.display = "none";
+    elMatchForm.style.display = "none";
+    elMolkkyForm.style.display = "none";
+    elFreeForm.style.display = "none";
     elSliderForm.style.display = "flex";
     renderSliderQuestion(q);
     return;
   }
 
   if (q.kind === "acknowledgement") {
-    hideAllForms();
+    elMcqOptions.style.display = "none";
+    elMatchForm.style.display = "none";
+    elMolkkyForm.style.display = "none";
+    elSliderForm.style.display = "none";
+    elFreeForm.style.display = "none";
     elAckForm.style.display = "block";
     return;
   }
 
   if (q.type === "mcq" || q.kind === "henry") {
-    hideAllForms();
     elMcqOptions.style.display = "grid";
+    elMatchForm.style.display = "none";
+    elMolkkyForm.style.display = "none";
+    elSliderForm.style.display = "none";
+    elFreeForm.style.display = "none";
     renderMcqOptions(q);
     return;
   }
 
-  hideAllForms();
+  elMcqOptions.style.display = "none";
+  elMatchForm.style.display = "none";
+  elMolkkyForm.style.display = "none";
+  elSliderForm.style.display = "none";
   elFreeForm.style.display = "flex";
   elFreeInput.value = "";
   elFreeInput.focus();
@@ -560,6 +445,13 @@ function configureQuestionImage(q) {
   elQuestionImage.src = imageSource;
   elQuestionImage.alt = q.imageAlt || "Illustration de la question";
   elQuestionImage.style.display = "block";
+}
+function countryToFlag(code) {
+  return code
+    .toUpperCase()
+    .replace(/./g, c =>
+      String.fromCodePoint(127397 + c.charCodeAt())
+    );
 }
 function renderMcqOptions(q) {
   currentOptions.forEach((opt) => {
@@ -1067,47 +959,29 @@ function getGroupPoints(q) {
   return pointsByGroup.get(getQuestionGroupKey(q)) ?? 0;
 }
 
-// Appelé par le maître (calcule le score, synchronise, puis rend l’écran).
+function shouldShowPointsBadge(q, addedPoints) {
+  return !(addedPoints === 0 && (q.section === "Signe distinctif" || q.kind === "acknowledgement"));
+}
+
 function showAnswerScreen(result, q) {
   clearAutoAdvance();
   if (isHenryQuestion(q)) stopHenryTimer();
+  showScreen("answer");
+  currentAnswerCorrect = result.correct;
+  elAnswerEasterEgg.textContent = "";
+  elAnswerEasterEgg.style.display = "none";
 
-  // Calcul du score local
   let addedPoints = result.correct ? result.addedPoints ?? 0 : 0;
   if (result.correct && q.henryFinal && !henryAwarded) {
     addedPoints += henryRemaining;
     henryAwarded = true;
     stopHenryTimer();
   }
+
   if (result.correct) {
     score += addedPoints;
     addGroupPoints(q, addedPoints);
-  }
-
-  // Enrichir result avec le addedPoints final avant de le sauvegarder
-  const finalResult = { ...result, addedPoints };
-  currentLastResult = finalResult;
-  currentAnswerCorrect = result.correct;
-
-  updateScoreUI();
-  if (syncEnabled) syncState();
-
-  renderAnswerScreen(finalResult, q);
-}
-
-// Appelé par le distant (le score est déjà dans Firebase, on ne re-calcule pas).
-function renderAnswerScreen(result, q) {
-  showScreen("answer");
-
-  currentAnswerCorrect = result.correct;
-  elAnswerEasterEgg.textContent = "";
-  elAnswerEasterEgg.style.display = "none";
-
-  const addedPoints = result.addedPoints ?? 0;
-
-  if (result.correct) {
     updateScoreUI();
-
     elAnswerIcon.textContent = "✅";
     elAnswerIcon.className = "answer-icon correct";
     elAnswerTitle.textContent = result.customTitle || getAnswerTitle(q, result);
@@ -1154,7 +1028,10 @@ function renderAnswerScreen(result, q) {
     elAnswerTitle.textContent = getAnswerTitle(q, result);
     elAnswerPoints.textContent = q.kind === "henry" ? `Henry : -${HENRY_WRONG_PENALTY} pts` : "+0 point";
     elAnswerPoints.className = "points-badge";
-    elAnswerPoints.style.display = "none";
+    elAnswerPoints.style.display = shouldShowPointsBadge(q, 0) ? "inline-block" : "none";
+    elAnswerPoints.style.display = addedPoints === 0
+      ? "none"
+      : "inline-block";
     const bubbleText = getAnswerBubbleText(q, result);
     if (shouldShowAnswerBubbleOnWrong(q) && bubbleText) {
       setAnswerExactContent(bubbleText, q, true);
@@ -1166,11 +1043,11 @@ function renderAnswerScreen(result, q) {
 
   const isLast = currentIndex >= QUESTIONS.length - 1;
   const isStageTransition = result.correct && Boolean(q.nextBlock) && !isLast;
+  console.log(isLast, QUESTIONS.length);
 
   elNextBtn.textContent =
     !result.correct &&
-      (q.section?.toLowerCase().includes("signe distinctif") ||
-        q.section === "Énigme")
+      q.section?.toLowerCase().includes("signe distinctif")
       ? "Réessayer →"
       : isLast
         ? "Voir mon score 🏆"
@@ -1186,6 +1063,8 @@ function renderAnswerScreen(result, q) {
       elNextBtn.click();
     }, ANSWER_AUTO_SKIP_DELAY);
   }
+
+  return false;
 }
 function hasDetailedAnswer(q, result) {
   if (q.section === "Vrai/Faux") return true;
@@ -1255,7 +1134,7 @@ function showResultScreen() {
   elFinalDetails.textContent = "Score obtenu pendant le quiz.";
 
   let medal = "🥉 Médaille de bronze";
-  let message = "Bravo d’avoir terminé le quiz. Avec les missions supplémentaires et les bonus, la médaille d’or reste atteignable.";
+  let message = "Balade terminée : mission accomplie, même si quelques bonus ont filé.";
   if (scoreRatio >= 0.8) {
     medal = "🥇 Médaille d’or";
     message = "Vous êtes des cracks… mais pourquoi s’arrêter là ?";
@@ -1263,7 +1142,11 @@ function showResultScreen() {
     medal = "🥈 Médaille d’argent";
     message = "Très belle médaille obtenue sur le quiz. Les missions supplémentaires et points bonus peuvent encore vous emmener vers l’or.";
   } else if (scoreRatio > 0.5) {
+    medal = "🥉 Médaille de bronze";
     message = "Médaille du quiz validée. Les missions supplémentaires et les bonus peuvent encore faire grimper votre médaille.";
+  } else {
+    medal = "🥉 Médaille de bronze";
+    message = "Bravo d’avoir terminé le quiz. Avec les missions supplémentaires et les bonus, la médaille d’or reste atteignable.";
   }
   elFinalMessage.textContent = `${medal} — ${message}`;
 }
@@ -1314,17 +1197,13 @@ function clearAutoAdvance() {
 }
 
 function advanceToNextQuestion() {
-  currentIndex++;
-
+  currentIndex += 1;
   if (currentIndex >= QUESTIONS.length) {
     showResultScreen();
     return;
   }
-
   showScreen("question");
   loadQuestion(currentIndex);
-  syncState(); // tout de suite
-
 }
 
 function looksLikeCoordinates(value) {
@@ -1402,6 +1281,8 @@ function setAnswerExactContent(text, q, asBubble) {
 }
 
 function formatAnswerBubbleHtml(text) {
+  console.log("TEXT BRUT :", JSON.stringify(text));
+
   const sections = text
     .split(/\n{2,}/u)
     .map((section) => section.trim())
@@ -1455,6 +1336,7 @@ function formatAnswerBubbleHtml(text) {
       return `<div class="answer-detail-block">${htmlGroups}</div>`;
     })
     .join("");
+  console.log("BLOCKS HTML :", blocks);
   return `<div class="answer-detail-wrap"><p class="answer-detail-intro">💡 Explication détaillée</p>${blocks}</div>`;
 }
 
@@ -1539,8 +1421,12 @@ function renderSignBriefing(q) {
   elHintImage.alt = "";
   elQuestionImage.style.display = "none";
   elAckSubmit.textContent = "OK, on est sur place";
-  hideAllForms();
   elAckForm.style.display = "block";
+  elMcqOptions.style.display = "none";
+  elMatchForm.style.display = "none";
+  elMolkkyForm.style.display = "none";
+  elSliderForm.style.display = "none";
+  elFreeForm.style.display = "none";
 }
 
 function getResolvedNextBlock(block, q) {
