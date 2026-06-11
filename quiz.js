@@ -709,6 +709,11 @@ function submitAcknowledgement() {
   }
   if (q.kind !== "acknowledgement") return;
   if (q.directResult) {
+    update(sessionRef, {
+      screen: "screen-result",
+      timestamp: Date.now()
+    });
+
     showResultScreen();
     return;
   }
