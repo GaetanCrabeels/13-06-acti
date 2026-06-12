@@ -1262,12 +1262,12 @@ function showResultScreen() {
   } else if (scoreRatio >= 0.65) {
     medal = "🥈 Médaille d’argent";
     message = "Très belle médaille obtenue sur le quiz. Les missions supplémentaires et points bonus peuvent encore vous emmener vers l’or.";
-  } else if (scoreRatio > 0.5) {
+  } else if (scoreRatio >= 0.5) {
     medal = "🥉 Médaille de bronze";
     message = "Médaille du quiz validée. Les missions supplémentaires et les bonus peuvent encore faire grimper votre médaille.";
-  } else {
-    medal = "🥉 Médaille de bronze";
-    message = "Bravo d’avoir terminé le quiz. Avec les missions supplémentaires et les bonus, la médaille d’or reste atteignable.";
+  } else if (scoreRatio < 0.5) {
+    medal = "🎭 Médaille des imposteur";
+    message = "Bravo aux traitres, vous avez votre mission secrète sans être démasqués";
   }
   elFinalMessage.textContent = `${medal} — ${message}`;
 }
