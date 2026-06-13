@@ -207,9 +207,9 @@ const missionCards = [
   },
   {
     id: "lac",
-    title: "Mission lac",
+    title: "Mission Color Hunt",
     items: [
-      { id: "lac-objet", label: "Un bouchon rouge usé (ou objet rouge similaire) a été retrouvé." },
+      { id: "lac-objet", label: "Prenez un maximum de photo avec la couleur rouge (10 points par photo)"},
       { id: "lac-photo", label: "L’objet mystère a été pris en photo. (Étape 8)" },
     ],
   },
